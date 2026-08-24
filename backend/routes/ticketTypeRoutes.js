@@ -3,7 +3,16 @@ const router = express.Router();
 
 const supabase = require("../config/supabase");
 
-// GET semua ticket types
+const {
+  verifyToken,
+  checkRole,
+} = require("../middleware/authMiddleware");
+
+// =========================
+// GET SEMUA TICKET TYPES
+// PUBLIC
+// =========================
+
 router.get("/", async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -35,7 +44,11 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET ticket type berdasarkan ID
+// =========================
+// GET TICKET TYPE BY ID
+// PUBLIC
+// =========================
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -62,123 +75,156 @@ router.get("/:id", async (req, res) => {
       data,
     });
   } catch (err) {
-    res.status(500).json({
+    res.status(404).json({
       success: false,
-      message: err.message,
+      message: "Ticket type tidak ditemukan",
     });
   }
 });
 
-// POST ticket type
-router.post("/", async (req, res) => {
-  try {
-    const {
-      concert_id,
-      name,
-      price,
-      stock,
-    } = req.body;
+// =========================
+// CREATE TICKET TYPE
+// ADMIN & SUPER ADMIN
+// =========================
 
-    if (!concert_id || !name || price === undefined || stock === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "concert_id, name, price, dan stock wajib diisi",
-      });
-    }
-
-    const { data, error } = await supabase
-      .from("ticket_types")
-      .insert([
-        {
-          concert_id,
-          name,
-          price,
-          stock,
-          sold: 0,
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    res.status(201).json({
-      success: true,
-      message: "Ticket type berhasil ditambahkan",
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-});
-
-// PUT ticket type
-router.put("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const {
-      concert_id,
-      name,
-      price,
-      stock,
-    } = req.body;
-
-    const { data, error } = await supabase
-      .from("ticket_types")
-      .update({
+router.post(
+  "/",
+  verifyToken,
+  checkRole("admin", "super_admin"),
+  async (req, res) => {
+    try {
+      const {
         concert_id,
         name,
         price,
         stock,
-      })
-      .eq("id", id)
-      .select()
-      .single();
+      } = req.body;
 
-    if (error) throw error;
+      if (
+        !concert_id ||
+        !name ||
+        price === undefined ||
+        stock === undefined
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "concert_id, name, price, dan stock wajib diisi",
+        });
+      }
 
-    res.json({
-      success: true,
-      message: "Ticket type berhasil diperbarui",
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+      const { data, error } = await supabase
+        .from("ticket_types")
+        .insert([
+          {
+            concert_id,
+            name,
+            price,
+            stock,
+            sold: 0,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.status(201).json({
+        success: true,
+        message: "Ticket type berhasil ditambahkan",
+        data,
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
   }
-});
+);
 
-// DELETE ticket type
-router.delete("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+// =========================
+// UPDATE TICKET TYPE
+// ADMIN & SUPER ADMIN
+// =========================
 
-    const { data, error } = await supabase
-      .from("ticket_types")
-      .delete()
-      .eq("id", id)
-      .select()
-      .single();
+router.put(
+  "/:id",
+  verifyToken,
+  checkRole("admin", "super_admin"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    if (error) throw error;
+      const {
+        concert_id,
+        name,
+        price,
+        stock,
+      } = req.body;
 
-    res.json({
-      success: true,
-      message: "Ticket type berhasil dihapus",
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+      const { data, error } = await supabase
+        .from("ticket_types")
+        .update({
+          concert_id,
+          name,
+          price,
+          stock,
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json({
+        success: true,
+        message: "Ticket type berhasil diperbarui",
+        data,
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
   }
-});
+);
+
+// =========================
+// DELETE TICKET TYPE
+// ADMIN & SUPER ADMIN
+// =========================
+
+router.delete(
+  "/:id",
+  verifyToken,
+  checkRole("admin", "super_admin"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const { data, error } = await supabase
+        .from("ticket_types")
+        .delete()
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      res.json({
+        success: true,
+        message: "Ticket type berhasil dihapus",
+        data,
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
+  }
+);
 
 module.exports = router;

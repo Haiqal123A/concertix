@@ -91,7 +91,10 @@ function AdminDashboard() {
     <div className="min-h-screen bg-[#080808] text-white">
       <main className="max-w-7xl mx-auto px-6 py-10">
 
-        {/* HEADER */}
+        {/* =========================
+            HEADER
+        ========================= */}
+
         <div className="mb-10">
           <p className="text-sm tracking-[0.3em] text-purple-400 mb-3">
             ADMIN PANEL
@@ -106,17 +109,24 @@ function AdminDashboard() {
           </p>
         </div>
 
-        {/* ERROR */}
+        {/* =========================
+            ERROR
+        ========================= */}
+
         {error && (
           <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-400">
             {error}
           </div>
         )}
 
-        {/* STAT CARDS */}
+        {/* =========================
+            STAT CARDS
+        ========================= */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
 
           {/* CONCERT */}
+
           <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
             <p className="text-sm text-zinc-500">
               Total Konser
@@ -132,6 +142,7 @@ function AdminDashboard() {
           </div>
 
           {/* TICKET */}
+
           <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
             <p className="text-sm text-zinc-500">
               Total Tiket
@@ -147,6 +158,7 @@ function AdminDashboard() {
           </div>
 
           {/* SOLD */}
+
           <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
             <p className="text-sm text-zinc-500">
               Tiket Terjual
@@ -162,6 +174,7 @@ function AdminDashboard() {
           </div>
 
           {/* REVENUE */}
+
           <div className="rounded-2xl border border-purple-500/20 bg-[#111111] p-6">
             <p className="text-sm text-zinc-500">
               Total Pendapatan
@@ -175,11 +188,15 @@ function AdminDashboard() {
               Dari payment terverifikasi
             </p>
           </div>
-
         </div>
 
-        {/* PAYMENT STATUS */}
+        {/* =========================
+            PAYMENT STATUS
+        ========================= */}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+          {/* PENDING */}
 
           <div className="rounded-2xl border border-yellow-500/20 bg-[#111111] p-6">
             <p className="text-zinc-500 text-sm">
@@ -195,6 +212,8 @@ function AdminDashboard() {
             </p>
           </div>
 
+          {/* PAID */}
+
           <div className="rounded-2xl border border-green-500/20 bg-[#111111] p-6">
             <p className="text-zinc-500 text-sm">
               Payment Berhasil
@@ -209,6 +228,8 @@ function AdminDashboard() {
             </p>
           </div>
 
+          {/* REJECTED */}
+
           <div className="rounded-2xl border border-red-500/20 bg-[#111111] p-6">
             <p className="text-zinc-500 text-sm">
               Payment Ditolak
@@ -222,10 +243,145 @@ function AdminDashboard() {
               Payment rejected
             </p>
           </div>
-
         </div>
 
-        {/* QUICK ACTION */}
+        {/* =========================
+            MANAJEMEN DATA
+        ========================= */}
+
+        <div className="rounded-2xl border border-white/10 bg-[#111111] p-6 mb-8">
+
+          <div className="mb-5">
+            <h2 className="text-xl font-bold">
+              Manajemen Data
+            </h2>
+
+            <p className="text-sm text-zinc-500 mt-1">
+              Kelola data utama Concertix.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+            {/* KONSER */}
+
+            <Link
+              to="/admin/concerts"
+              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-2xl">
+                  🎤
+                </p>
+
+                <span className="text-zinc-600 group-hover:text-purple-400 transition">
+                  →
+                </span>
+              </div>
+
+              <p className="font-semibold mt-4">
+                Kelola Konser
+              </p>
+
+              <p className="text-sm text-zinc-500 mt-1">
+                Tambah, edit, dan hapus konser.
+              </p>
+            </Link>
+
+            {/* ARTIST */}
+
+            <Link
+              to="/admin/artists"
+              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-2xl">
+                  🎵
+                </p>
+
+                <span className="text-zinc-600 group-hover:text-purple-400 transition">
+                  →
+                </span>
+              </div>
+
+              <p className="font-semibold mt-4">
+                Kelola Artist
+              </p>
+
+              <p className="text-sm text-zinc-500 mt-1">
+                Kelola data penyanyi dan musisi.
+              </p>
+            </Link>
+
+            {/* CATEGORY */}
+
+            <Link
+              to="/admin/categories"
+              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-2xl">
+                  🏷️
+                </p>
+
+                <span className="text-zinc-600 group-hover:text-purple-400 transition">
+                  →
+                </span>
+              </div>
+
+              <p className="font-semibold mt-4">
+                Kelola Category
+              </p>
+
+              <p className="text-sm text-zinc-500 mt-1">
+                Kelola kategori konser.
+              </p>
+            </Link>
+
+            {/* VENUE */}
+
+            <Link
+              to="/admin/venues"
+              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-2xl">
+                  📍
+                </p>
+
+                <span className="text-zinc-600 group-hover:text-purple-400 transition">
+                  →
+                </span>
+              </div>
+
+              <p className="font-semibold mt-4">
+                Kelola Venue
+              </p>
+
+              <p className="text-sm text-zinc-500 mt-1">
+                Kelola lokasi konser.
+              </p>
+            </Link>
+
+            <Link
+  to="/admin/ticket-types"
+  className="rounded-xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition"
+>
+  <p className="font-semibold">
+    Kelola Tiket
+  </p>
+
+  <p className="text-sm text-zinc-500 mt-1">
+    Tambah, edit, dan kelola tiket konser
+  </p>
+</Link>
+          </div>
+        </div>
+
+        {/* =========================
+            QUICK ACTION
+        ========================= */}
+
         <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
 
           <h2 className="text-xl font-bold mb-5">
@@ -233,6 +389,8 @@ function AdminDashboard() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            {/* PAYMENT */}
 
             <Link
               to="/admin/payments"
@@ -243,9 +401,11 @@ function AdminDashboard() {
               </p>
 
               <p className="text-sm text-zinc-500 mt-1">
-                Kelola pembayaran pengguna
+                Kelola pembayaran pengguna.
               </p>
             </Link>
+
+            {/* WEBSITE */}
 
             <Link
               to="/"
@@ -256,9 +416,11 @@ function AdminDashboard() {
               </p>
 
               <p className="text-sm text-zinc-500 mt-1">
-                Kembali ke halaman utama
+                Kembali ke halaman utama.
               </p>
             </Link>
+
+            {/* PAYMENT MASUK */}
 
             <Link
               to="/admin/payments"
@@ -269,7 +431,7 @@ function AdminDashboard() {
               </p>
 
               <p className="text-sm text-zinc-500 mt-1">
-                {pendingPayments} payment menunggu
+                {pendingPayments} payment menunggu.
               </p>
             </Link>
 

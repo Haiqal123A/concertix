@@ -12,6 +12,12 @@ import OrderDetail from "./pages/OrderDetail";
 
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminConcerts from "./pages/admin/AdminConcerts";
+import AdminArtists from "./pages/admin/AdminArtists";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminVenues from "./pages/admin/AdminVenues";
+import AdminTicketTypes from "./pages/admin/AdminTicketTypes";
+import AdminLayout from "./components/admin/AdminLayout";
 
 function App() {
   return (
@@ -68,27 +74,86 @@ function App() {
         />
 
 
-        {/* =========================
-            ADMIN
-        ========================= */}
+       {/* =========================
+    ADMIN
+========================= */}
 
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+<Route
+  path="/admin"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout>
+        <AdminDashboard />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
 
-        <Route
-          path="/admin/payments"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminPayments />
-            </ProtectedRoute>
-          }
-        />
+<Route
+  path="/admin/concerts"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout>
+        <AdminConcerts />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/artists"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout>
+        <AdminArtists />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/categories"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout>
+        <AdminCategories />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/venues"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout>
+        <AdminVenues />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/ticket-types"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout>
+        <AdminTicketTypes />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/payments"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout>
+        <AdminPayments />
+      </AdminLayout>
+    </ProtectedRoute>
+  }
+/>
 
       </Routes>
     </BrowserRouter>
