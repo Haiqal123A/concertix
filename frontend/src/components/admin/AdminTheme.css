@@ -1,0 +1,55 @@
+.admin-shell {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+.admin-shell main [class~="bg-[#080808]"],
+.admin-shell main [class~="bg-neutral-950"] {
+  background-color: #f8fafc !important;
+}
+
+.admin-shell main [class~="min-h-screen"][class~="text-white"] {
+  color: #0f172a !important;
+}
+
+.admin-shell main [class~="bg-[#111111]"],
+.admin-shell main [class~="bg-white/[0.03]"] {
+  background-color: #fff !important;
+}
+
+.admin-shell main [class~="bg-[#181818]"],
+.admin-shell main [class~="bg-black/30"],
+.admin-shell main [class~="bg-black/20"],
+.admin-shell main [class~="bg-white/5"],
+.admin-shell main [class~="bg-white/[0.02]"] {
+  background-color: #f8fafc !important;
+}
+
+.admin-shell main [class~="border-white/10"],
+.admin-shell main [class~="border-white/5"] {
+  border-color: #e2e8f0 !important;
+}
+
+.admin-shell main [class~="text-zinc-300"],
+.admin-shell main [class~="text-zinc-400"],
+.admin-shell main [class~="text-zinc-500"],
+.admin-shell main [class~="text-zinc-600"],
+.admin-shell main [class~="text-neutral-400"],
+.admin-shell main [class~="text-neutral-500"],
+.admin-shell main [class~="text-neutral-600"] {
+  color: #64748b !important;
+}
+
+.admin-shell main [class~="hover:bg-white/5"]:hover,
+.admin-shell main [class~="hover:bg-white/10"]:hover,
+.admin-shell main [class~="hover:bg-white/[0.02]"]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+@media (max-width: 1023px) {
+  .admin-shell main {
+    min-height: calc(100vh - 68px);
+  }
+}

@@ -19,26 +19,27 @@ import AdminVenues from "./pages/admin/AdminVenues";
 import AdminTicketTypes from "./pages/admin/AdminTicketTypes";
 import AdminLayout from "./components/admin/AdminLayout";
 
+// =========================
+// USER LAYOUT
+// =========================
+
+function UserLayout({ children }) {
+  return (
+    <>
+      <Navbar />
+      {children}
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-
       <Routes>
 
         {/* =========================
-            PUBLIC
+            PUBLIC - TANPA NAVBAR
         ========================= */}
-
-        <Route
-          path="/"
-          element={<Home />}
-        />
-
-        <Route
-          path="/concert/:id"
-          element={<ConcertDetail />}
-        />
 
         <Route
           path="/login"
@@ -52,14 +53,39 @@ function App() {
 
 
         {/* =========================
-            USER
+            PUBLIC - DENGAN NAVBAR
+        ========================= */}
+
+        <Route
+          path="/"
+          element={
+            <UserLayout>
+              <Home />
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path="/concert/:id"
+          element={
+            <UserLayout>
+              <ConcertDetail />
+            </UserLayout>
+          }
+        />
+
+
+        {/* =========================
+            USER - DENGAN NAVBAR
         ========================= */}
 
         <Route
           path="/orders"
           element={
             <ProtectedRoute allowedRoles={["user"]}>
-              <Orders />
+              <UserLayout>
+                <Orders />
+              </UserLayout>
             </ProtectedRoute>
           }
         />
@@ -68,92 +94,95 @@ function App() {
           path="/orders/:id"
           element={
             <ProtectedRoute allowedRoles={["user"]}>
-              <OrderDetail />
+              <UserLayout>
+                <OrderDetail />
+              </UserLayout>
             </ProtectedRoute>
           }
         />
 
 
-       {/* =========================
-    ADMIN
-========================= */}
+        {/* =========================
+            ADMIN
+            TANPA NAVBAR USER
+        ========================= */}
 
-<Route
-  path="/admin"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayout>
-        <AdminDashboard />
-      </AdminLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/admin/concerts"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayout>
-        <AdminConcerts />
-      </AdminLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/admin/concerts"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminConcerts />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/admin/artists"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayout>
-        <AdminArtists />
-      </AdminLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/admin/artists"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminArtists />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/admin/categories"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayout>
-        <AdminCategories />
-      </AdminLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/admin/categories"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminCategories />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/admin/venues"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayout>
-        <AdminVenues />
-      </AdminLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/admin/venues"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminVenues />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/admin/ticket-types"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayout>
-        <AdminTicketTypes />
-      </AdminLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/admin/ticket-types"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminTicketTypes />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/admin/payments"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AdminLayout>
-        <AdminPayments />
-      </AdminLayout>
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/admin/payments"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminLayout>
+                <AdminPayments />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
 
       </Routes>
     </BrowserRouter>

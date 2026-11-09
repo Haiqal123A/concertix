@@ -16,12 +16,15 @@ function AdminDashboard() {
         setLoading(true);
         setError("");
 
-        const [concertResponse, ticketResponse, paymentResponse] =
-          await Promise.all([
-            api.get("/concerts"),
-            api.get("/ticket-types"),
-            api.get("/payments/admin"),
-          ]);
+        const [
+          concertResponse,
+          ticketResponse,
+          paymentResponse,
+        ] = await Promise.all([
+          api.get("/concerts"),
+          api.get("/ticket-types"),
+          api.get("/payments/admin"),
+        ]);
 
         setConcerts(concertResponse.data.data || []);
         setTickets(ticketResponse.data.data || []);
@@ -79,34 +82,55 @@ function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center">
-        <p className="text-zinc-400">
-          Memuat dashboard admin...
-        </p>
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-violet-100 border-t-violet-600" />
+
+          <p className="text-sm font-medium text-neutral-500">
+            Memuat dashboard admin...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
-      <main className="max-w-7xl mx-auto px-6 py-10">
+    <div className="relative min-h-screen overflow-hidden bg-white text-neutral-900">
+
+      {/* =========================
+          BACKGROUND GLOW
+      ========================= */}
+
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-violet-100/60 blur-3xl" />
+
+        <div className="absolute right-[-120px] top-20 h-96 w-96 rounded-full bg-fuchsia-100/50 blur-3xl" />
+
+        <div className="absolute left-1/2 top-[650px] h-80 w-80 -translate-x-1/2 rounded-full bg-violet-100/30 blur-3xl" />
+      </div>
+
+      <main className="relative mx-auto max-w-7xl px-5 pb-16 pt-6 sm:px-6 sm:pt-8">
 
         {/* =========================
             HEADER
         ========================= */}
 
-        <div className="mb-10">
-          <p className="text-sm tracking-[0.3em] text-purple-400 mb-3">
-            ADMIN PANEL
-          </p>
+        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
 
-          <h1 className="text-4xl font-bold">
-            Dashboard Admin
-          </h1>
+          <div>
+            <div className="mb-3 inline-flex items-center rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5">
 
-          <p className="text-zinc-400 mt-2">
-            Kelola konser, tiket, order, dan pembayaran Concertix.
-          </p>
+            </div>
+
+            <h1 className="text-3xl font-black tracking-tight text-neutral-950 sm:text-4xl">
+              Dashboard Admin
+            </h1>
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-500 sm:text-base">
+              Kelola konser, tiket, order, dan pembayaran Concertix
+              dengan mudah.
+            </p>
+          </div>
         </div>
 
         {/* =========================
@@ -114,7 +138,7 @@ function AdminDashboard() {
         ========================= */}
 
         {error && (
-          <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-400">
+          <div className="mb-6 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -123,68 +147,85 @@ function AdminDashboard() {
             STAT CARDS
         ========================= */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-          {/* CONCERT */}
+          {/* TOTAL CONCERT */}
 
-          <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
-            <p className="text-sm text-zinc-500">
-              Total Konser
-            </p>
+          <div className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm shadow-neutral-200/50 transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/50">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-neutral-500">
+                  Total Konser
+                </p>
 
-            <h2 className="text-3xl font-bold mt-3">
-              {totalConcerts}
-            </h2>
+                <h2 className="mt-3 text-3xl font-black text-neutral-950">
+                  {totalConcerts}
+                </h2>
+              </div>
 
-            <p className="text-sm text-purple-400 mt-2">
-              Konser tersedia
+             
+            </div>
+
+<p className="mt-3 text-xs font-semibold text-gray-400/50">              Konser tersedia
             </p>
           </div>
 
-          {/* TICKET */}
+          {/* TOTAL TICKET */}
 
-          <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
-            <p className="text-sm text-zinc-500">
-              Total Tiket
-            </p>
+          <div className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm shadow-neutral-200/50 transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/50">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-neutral-500">
+                  Total Tiket
+                </p>
 
-            <h2 className="text-3xl font-bold mt-3">
-              {totalTickets.toLocaleString("id-ID")}
-            </h2>
+                <h2 className="mt-3 text-3xl font-black text-neutral-950">
+                  {totalTickets.toLocaleString("id-ID")}
+                </h2>
+              </div>
+            </div>
 
-            <p className="text-sm text-purple-400 mt-2">
+<p className="mt-3 text-xs font-semibold text-gray-400/50">
               Stok keseluruhan
             </p>
           </div>
 
           {/* SOLD */}
 
-          <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
-            <p className="text-sm text-zinc-500">
-              Tiket Terjual
-            </p>
+          <div className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm shadow-neutral-200/50 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/50">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-neutral-500">
+                  Tiket Terjual
+                </p>
 
-            <h2 className="text-3xl font-bold mt-3">
-              {totalSold.toLocaleString("id-ID")}
-            </h2>
+                <h2 className="mt-3 text-3xl font-black text-neutral-950">
+                  {totalSold.toLocaleString("id-ID")}
+                </h2>
+              </div>
+            </div>
 
-            <p className="text-sm text-green-400 mt-2">
+<p className="mt-3 text-xs font-semibold text-gray-400/50">
               Tiket berhasil terjual
             </p>
           </div>
 
           {/* REVENUE */}
 
-          <div className="rounded-2xl border border-purple-500/20 bg-[#111111] p-6">
-            <p className="text-sm text-zinc-500">
-              Total Pendapatan
-            </p>
+          <div className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm shadow-neutral-200/50 transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/50">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-neutral-500">
+                  Total Pendapatan
+                </p>
 
-            <h2 className="text-2xl font-bold mt-3 text-purple-400">
-              {formatRupiah(totalRevenue)}
-            </h2>
+                <h2 className="mt-3 text-3xl font-black text-neutral-950">
+                  {formatRupiah(totalRevenue)}
+                </h2>
+              </div>
+            </div>
 
-            <p className="text-sm text-zinc-500 mt-2">
+<p className="mt-3 text-xs font-semibold text-gray-400/50">
               Dari payment terverifikasi
             </p>
           </div>
@@ -194,213 +235,111 @@ function AdminDashboard() {
             PAYMENT STATUS
         ========================= */}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div className="mb-8">
 
-          {/* PENDING */}
-
-          <div className="rounded-2xl border border-yellow-500/20 bg-[#111111] p-6">
-            <p className="text-zinc-500 text-sm">
-              Menunggu Verifikasi
-            </p>
-
-            <h2 className="text-3xl font-bold mt-2 text-yellow-400">
-              {pendingPayments}
+          <div className="mb-4">
+            <h2 className="text-xl font-black text-neutral-950">
+              Status Pembayaran
             </h2>
 
-            <p className="text-sm text-zinc-500 mt-1">
-              Payment pending
+            <p className="mt-1 text-sm text-neutral-500">
+              Ringkasan pembayaran pengguna.
             </p>
           </div>
 
-          {/* PAID */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-          <div className="rounded-2xl border border-green-500/20 bg-[#111111] p-6">
-            <p className="text-zinc-500 text-sm">
-              Payment Berhasil
-            </p>
+            {/* PENDING */}
 
-            <h2 className="text-3xl font-bold mt-2 text-green-400">
-              {paidPayments}
-            </h2>
+<div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm shadow-neutral-200/50">
+  <div className="flex items-center justify-between">
+    <p className="text-sm font-semibold text-neutral-600">
+      Menunggu Verifikasi
+    </p>
+  </div>
 
-            <p className="text-sm text-zinc-500 mt-1">
-              Sudah diverifikasi
-            </p>
-          </div>
+  <h2 className="mt-4 text-3xl font-semibold text-neutral-700">
+    {pendingPayments}
+  </h2>
 
-          {/* REJECTED */}
+  <p className="mt-1 text-xs text-neutral-500">
+    Payment pending
+  </p>
+</div>
 
-          <div className="rounded-2xl border border-red-500/20 bg-[#111111] p-6">
-            <p className="text-zinc-500 text-sm">
-              Payment Ditolak
-            </p>
+            {/* PAID */}
 
-            <h2 className="text-3xl font-bold mt-2 text-red-400">
-              {rejectedPayments}
-            </h2>
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm shadow-neutral-200/50">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-neutral-600">
+                  Payment Berhasil
+                </p>
+              </div>
 
-            <p className="text-sm text-zinc-500 mt-1">
-              Payment rejected
-            </p>
+              <h2 className="mt-4 text-3xl font-semibold text-green-700">
+                {paidPayments}
+              </h2>
+
+              <p className="mt-1 text-xs text-neutral-500">
+                Sudah diverifikasi
+              </p>
+            </div>
+
+            {/* REJECTED */}
+
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm shadow-neutral-200/50">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-neutral-600">
+                  Payment Ditolak
+                </p>
+              </div>
+
+              <h2 className="mt-4 text-3xl font-semibold text-red-700">
+                {rejectedPayments}
+              </h2>
+
+              <p className="mt-1 text-xs text-neutral-500">
+                Payment rejected
+              </p>
+            </div>
           </div>
         </div>
 
         {/* =========================
-            MANAJEMEN DATA
+            QUICK ACTIONS
         ========================= */}
 
-        <div className="rounded-2xl border border-white/10 bg-[#111111] p-6 mb-8">
+        <div className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm shadow-neutral-200/50 sm:p-6">
 
           <div className="mb-5">
-            <h2 className="text-xl font-bold">
-              Manajemen Data
+            <h2 className="text-xl font-black text-neutral-950">
+              Quick Actions
             </h2>
 
-            <p className="text-sm text-zinc-500 mt-1">
-              Kelola data utama Concertix.
+            <p className="mt-1 text-sm text-neutral-500">
+              Akses cepat ke fitur penting Concertix.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-
-            {/* KONSER */}
-
-            <Link
-              to="/admin/concerts"
-              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-2xl">
-                  🎤
-                </p>
-
-                <span className="text-zinc-600 group-hover:text-purple-400 transition">
-                  →
-                </span>
-              </div>
-
-              <p className="font-semibold mt-4">
-                Kelola Konser
-              </p>
-
-              <p className="text-sm text-zinc-500 mt-1">
-                Tambah, edit, dan hapus konser.
-              </p>
-            </Link>
-
-            {/* ARTIST */}
-
-            <Link
-              to="/admin/artists"
-              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-2xl">
-                  🎵
-                </p>
-
-                <span className="text-zinc-600 group-hover:text-purple-400 transition">
-                  →
-                </span>
-              </div>
-
-              <p className="font-semibold mt-4">
-                Kelola Artist
-              </p>
-
-              <p className="text-sm text-zinc-500 mt-1">
-                Kelola data penyanyi dan musisi.
-              </p>
-            </Link>
-
-            {/* CATEGORY */}
-
-            <Link
-              to="/admin/categories"
-              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-2xl">
-                  🏷️
-                </p>
-
-                <span className="text-zinc-600 group-hover:text-purple-400 transition">
-                  →
-                </span>
-              </div>
-
-              <p className="font-semibold mt-4">
-                Kelola Category
-              </p>
-
-              <p className="text-sm text-zinc-500 mt-1">
-                Kelola kategori konser.
-              </p>
-            </Link>
-
-            {/* VENUE */}
-
-            <Link
-              to="/admin/venues"
-              className="group rounded-xl border border-white/10 bg-white/[0.03] p-5 hover:border-purple-500/30 hover:bg-purple-500/5 transition"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-2xl">
-                  📍
-                </p>
-
-                <span className="text-zinc-600 group-hover:text-purple-400 transition">
-                  →
-                </span>
-              </div>
-
-              <p className="font-semibold mt-4">
-                Kelola Venue
-              </p>
-
-              <p className="text-sm text-zinc-500 mt-1">
-                Kelola lokasi konser.
-              </p>
-            </Link>
-
-            <Link
-  to="/admin/ticket-types"
-  className="rounded-xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition"
->
-  <p className="font-semibold">
-    Kelola Tiket
-  </p>
-
-  <p className="text-sm text-zinc-500 mt-1">
-    Tambah, edit, dan kelola tiket konser
-  </p>
-</Link>
-          </div>
-        </div>
-
-        {/* =========================
-            QUICK ACTION
-        ========================= */}
-
-        <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
-
-          <h2 className="text-xl font-bold mb-5">
-            Quick Actions
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
             {/* PAYMENT */}
 
             <Link
               to="/admin/payments"
-              className="rounded-xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition"
+              className="group rounded-2xl border border-neutral-200 bg-neutral-50/60 p-5 transition hover:border-violet-200 hover:bg-violet-50/60"
             >
-              <p className="font-semibold">
-                Verifikasi Payment
-              </p>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-neutral-900">
+                  Verifikasi Payment
+                </span>
 
-              <p className="text-sm text-zinc-500 mt-1">
+                <span className="text-neutral-300 transition group-hover:text-violet-600">
+                  →
+                </span>
+              </div>
+
+              <p className="mt-2 text-sm text-neutral-500">
                 Kelola pembayaran pengguna.
               </p>
             </Link>
@@ -409,13 +348,19 @@ function AdminDashboard() {
 
             <Link
               to="/"
-              className="rounded-xl border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition"
+              className="group rounded-2xl border border-neutral-200 bg-neutral-50/60 p-5 transition hover:border-violet-200 hover:bg-violet-50/60"
             >
-              <p className="font-semibold">
-                Lihat Website
-              </p>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-neutral-900">
+                  Lihat Website
+                </span>
 
-              <p className="text-sm text-zinc-500 mt-1">
+                <span className="text-neutral-300 transition group-hover:text-violet-600">
+                  →
+                </span>
+              </div>
+
+              <p className="mt-2 text-sm text-neutral-500">
                 Kembali ke halaman utama.
               </p>
             </Link>
@@ -424,18 +369,44 @@ function AdminDashboard() {
 
             <Link
               to="/admin/payments"
-              className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-5 hover:bg-purple-500/10 transition"
+              className="group rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-fuchsia-50 p-5 transition hover:border-violet-300 hover:shadow-md hover:shadow-violet-100"
             >
-              <p className="font-semibold text-purple-400">
-                Payment Masuk
-              </p>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-violet-700">
+                  Payment Masuk
+                </span>
 
-              <p className="text-sm text-zinc-500 mt-1">
+                <span className="text-violet-300 transition group-hover:text-violet-600">
+                  →
+                </span>
+              </div>
+
+              <p className="mt-2 text-sm text-neutral-500">
                 {pendingPayments} payment menunggu.
               </p>
             </Link>
-
           </div>
+        </div>
+
+        {/* =========================
+            FOOTER INFO
+        ========================= */}
+
+        <div className="mt-6 flex flex-col gap-2 rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 to-fuchsia-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-bold text-neutral-800">
+              Concertix Admin
+            </p>
+
+            <p className="text-xs text-neutral-500">
+              Kelola seluruh sistem Concertix dari satu tempat.
+            </p>
+          </div>
+
+          <span className="text-xs font-semibold text-violet-600">
+            {totalConcerts} Concert
+            {totalConcerts !== 1 ? "s" : ""}
+          </span>
         </div>
 
       </main>

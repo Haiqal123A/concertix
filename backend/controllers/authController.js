@@ -8,10 +8,27 @@ const Auth = require("../models/authModel");
 // ======================
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password } = req.body;
 
-    // Cek email
-    const existingUser = await Auth.findUserByEmail(email);
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Nama, email, dan password wajib diisi",
+      });
+    }
+
+    const trimmedName = String(name).trim();
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const trimmedPassword = String(password);
+
+    if (!trimmedName || !normalizedEmail || trimmedPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Data tidak valid. Password minimal 6 karakter.",
+      });
+    }
+
+    const existingUser = await Auth.findUserByEmail(normalizedEmail);
 
     if (existingUser) {
       return res.status(400).json({
@@ -20,15 +37,12 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
 
-    // Simpan user
     const user = await Auth.createUser({
-      name,
-      email,
+      name: trimmedName,
+      email: normalizedEmail,
       password: hashedPassword,
-      phone,
       role: "user",
     });
 
@@ -42,9 +56,10 @@ exports.register = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("REGISTER_ERROR:", err);
     res.status(500).json({
       success: false,
-      message: err.message,
+      message: err.message || "Register gagal",
     });
   }
 };
@@ -55,9 +70,16 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    // Cari user
-    const user = await Auth.findUserByEmail(email);
+    if (!normalizedEmail || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email dan password wajib diisi",
+      });
+    }
+
+    const user = await Auth.findUserByEmail(normalizedEmail);
 
     if (!user) {
       return res.status(404).json({

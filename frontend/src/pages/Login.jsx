@@ -38,29 +38,36 @@ function Login() {
         );
       }
 
-      // ===============================
-      // SIMPAN TOKEN
-      // ===============================
-     sessionStorage.setItem(
-  "token",
-  response.data.token
-);
+      sessionStorage.setItem(
+        "token",
+        response.data.token
+      );
 
-sessionStorage.setItem(
-  "user",
-  JSON.stringify(response.data.user)
-);
+      sessionStorage.setItem(
+        "user",
+        JSON.stringify(response.data.user)
+      );
 
-      // ===============================
-      // CEK TIKET YANG SEBELUMNYA DIPILIH
-      // ===============================
-      const selectedTicket =
-        localStorage.getItem("selectedTicket");
+      // Check role dan redirect sesuai role
+      const userRole = response.data.user?.role;
 
-      if (selectedTicket) {
-        navigate(`/concert/${JSON.parse(selectedTicket).concert_id}`);
+      if (userRole === "admin") {
+        // Admin langsung ke dashboard
+        navigate("/admin", { replace: true });
       } else {
-        navigate("/");
+        // User biasa cek selectedTicket atau ke home
+        const selectedTicket =
+          localStorage.getItem("selectedTicket");
+
+        if (selectedTicket) {
+          const ticketData = JSON.parse(selectedTicket);
+
+          navigate(
+            `/concert/${ticketData.concert_id}`
+          );
+        } else {
+          navigate("/");
+        }
       }
     } catch (err) {
       console.error("LOGIN ERROR:", err);
@@ -76,98 +83,119 @@ sessionStorage.setItem(
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-neutral-950 px-6 py-16 text-white">
+    <div className="relative min-h-[calc(100vh-80px)] overflow-hidden bg-white px-6 py-16">
 
-      <div className="w-full max-w-md">
+      {/* Background Glow */}
+      <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-violet-100 blur-3xl" />
 
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <p className="text-sm font-semibold tracking-[0.2em] text-violet-400">
-            WELCOME BACK
-          </p>
+      <div className="pointer-events-none absolute -right-40 top-20 h-96 w-96 rounded-full bg-fuchsia-100 blur-3xl" />
 
-          <h1 className="mt-3 text-4xl font-black">
-            Login ke Concertix
-          </h1>
+      {/* Login */}
+      <div className="relative mx-auto flex min-h-[calc(100vh-160px)] max-w-md items-center">
 
-          <p className="mt-3 text-neutral-500">
-            Masuk untuk melanjutkan pembelian tiketmu.
-          </p>
-        </div>
+        <div className="w-full">
 
-        {/* Card */}
-        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-2xl sm:p-8">
+          {/* Header */}
+          <div className="mb-8 text-center">
 
-          {error && (
-            <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
+         
 
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-5"
-          >
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-neutral-950">
+              Login ke Concertix
+            </h1>
 
-            {/* Email */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-neutral-300">
-                Email
-              </label>
+            <p className="mt-3 text-sm text-neutral-500">
+              Masuk untuk melanjutkan pembelian tiketmu.
+            </p>
 
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="nama@email.com"
-                required
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-neutral-600 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-              />
-            </div>
+          </div>
 
-            {/* Password */}
-            <div>
-              <label className="mb-2 block text-sm font-medium text-neutral-300">
-                Password
-              </label>
+          {/* Card */}
+          <div className="rounded-3xl border border-neutral-200 bg-white p-7 shadow-xl shadow-neutral-200/50 sm:p-8">
 
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Masukkan password"
-                required
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-neutral-600 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
-              />
-            </div>
+            {/* Error */}
+            {error && (
+              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </div>
+            )}
 
-            {/* Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-white py-3.5 font-semibold text-neutral-950 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
             >
-              {loading ? "Memproses..." : "Login"}
-            </button>
 
-          </form>
+              {/* Email */}
+              <div>
 
-          {/* Register */}
-          <div className="mt-6 border-t border-white/10 pt-6 text-center text-sm text-neutral-500">
-            Belum punya akun?{" "}
-            <Link
-              to="/register"
-              className="font-semibold text-violet-400 hover:text-violet-300"
-            >
-              Daftar sekarang
-            </Link>
+                <label className="mb-2 block text-sm font-semibold text-neutral-800">
+                  Email
+                </label>
+
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="nama@email.com"
+                  required
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
+                />
+
+              </div>
+
+              {/* Password */}
+              <div>
+
+                <label className="mb-2 block text-sm font-semibold text-neutral-800">
+                  Password
+                </label>
+
+                <input
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Masukkan password"
+                  required
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/10"
+                />
+
+              </div>
+
+              {/* Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-xl bg-violet-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? "Memproses..." : "Login"}
+              </button>
+
+            </form>
+
+            {/* Register */}
+            <div className="mt-6 border-t border-neutral-200 pt-6 text-center">
+
+              <p className="text-sm text-neutral-500">
+                Belum punya akun?
+              </p>
+
+              <Link
+                to="/register"
+                className="mt-1 inline-block text-sm font-bold text-violet-600 transition hover:text-violet-700"
+              >
+                Daftar sekarang 
+              </Link>
+
+            </div>
+
           </div>
 
         </div>
 
       </div>
+
     </div>
   );
 }

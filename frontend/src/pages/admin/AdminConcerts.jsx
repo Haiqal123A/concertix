@@ -214,25 +214,25 @@ function AdminConcerts() {
   };
 
   // =========================
-  // STATUS BADGE
+  // STATUS
   // =========================
 
   const getStatusClass = (status) => {
     switch (status) {
       case "upcoming":
-        return "bg-purple-500/10 text-purple-400 border-purple-500/20";
+        return "bg-violet-50 text-violet-700 border-violet-200";
 
       case "ongoing":
-        return "bg-green-500/10 text-green-400 border-green-500/20";
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
 
       case "finished":
-        return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
+        return "bg-neutral-100 text-neutral-600 border-neutral-200";
 
       case "cancelled":
-        return "bg-red-500/10 text-red-400 border-red-500/20";
+        return "bg-red-50 text-red-600 border-red-200";
 
       default:
-        return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
+        return "bg-neutral-100 text-neutral-600 border-neutral-200";
     }
   };
 
@@ -242,63 +242,65 @@ function AdminConcerts() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white flex items-center justify-center">
-        <p className="text-zinc-400">
-          Memuat data konser...
-        </p>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-violet-100 border-t-violet-600" />
+
+          <p className="text-sm font-medium text-neutral-500">
+            Memuat data konser...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white">
+<div className="relative overflow-hidden bg-white px-6 py-8 sm:px-8">
+      {/* =========================
+          BACKGROUND GLOW
+      ========================= */}
 
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-32 top-10 h-80 w-80 rounded-full bg-violet-200/30 blur-3xl" />
+        <div className="absolute right-0 top-20 h-96 w-96 rounded-full bg-fuchsia-200/25 blur-3xl" />
+        <div className="absolute left-1/2 top-[600px] h-72 w-72 -translate-x-1/2 rounded-full bg-violet-100/30 blur-3xl" />
+      </div>
 
-        {/* =========================
-            HEADER
-        ========================= */}
+<main className="relative mx-auto max-w-7xl px-5 pb-16 pt-6 sm:px-6 sm:pt-8">
+       <div className="mb-7 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+  <div>
+    <h1 className="text-3xl font-black tracking-tight text-neutral-900 sm:text-4xl">
+      Kelola Konser
+    </h1>
 
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-10">
+    <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-500 sm:text-base">
+      Tambah, edit, dan kelola konser Concertix dengan mudah.
+    </p>
+  </div>
 
-          <div>
-            <p className="text-sm tracking-[0.3em] text-purple-400 mb-3">
-              ADMIN PANEL
-            </p>
-
-            <h1 className="text-4xl font-bold">
-              Kelola Konser
-            </h1>
-
-            <p className="text-zinc-400 mt-2">
-              Tambah, edit, dan kelola konser Concertix.
-            </p>
-          </div>
-
-          <button
-            onClick={() => {
-              if (showForm) {
-                resetForm();
-              } else {
-                setShowForm(true);
-              }
-            }}
-            className="rounded-xl bg-purple-600 px-5 py-3 font-semibold hover:bg-purple-700 transition"
-          >
-            {showForm
-              ? "Tutup Form"
-              : "+ Tambah Konser"}
-          </button>
-
-        </div>
+  <button
+    onClick={() => {
+      if (showForm) {
+        resetForm();
+      } else {
+        setShowForm(true);
+      }
+    }}
+    className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 hover:shadow-violet-300"
+  >
+    {showForm ? "Tutup Form" : "+ Tambah Konser"}
+  </button>
+</div>
 
         {/* =========================
             ERROR
         ========================= */}
 
         {error && (
-          <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-400">
-            {error}
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm text-red-600">
+            <span className="mt-0.5">!</span>
+
+            <p>{error}</p>
           </div>
         )}
 
@@ -307,29 +309,39 @@ function AdminConcerts() {
         ========================= */}
 
         {showForm && (
-          <div className="rounded-2xl border border-white/10 bg-[#111111] p-6 mb-8">
+          <div className="mb-10 rounded-3xl border border-neutral-200 bg-white p-5 shadow-xl shadow-neutral-200/50 sm:p-7">
 
-            <div className="mb-6">
-              <h2 className="text-xl font-bold">
-                {editingId
-                  ? "Edit Konser"
-                  : "Tambah Konser"}
-              </h2>
+            <div className="mb-7 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-600">
+                  Concert Management
+                </p>
 
-              <p className="text-sm text-zinc-500 mt-1">
-                Lengkapi informasi konser di bawah.
-              </p>
+                <h2 className="mt-2 text-xl font-black text-neutral-900">
+                  {editingId
+                    ? "Edit Konser"
+                    : "Tambah Konser"}
+                </h2>
+
+                <p className="mt-1 text-sm text-neutral-500">
+                  Lengkapi informasi konser di bawah.
+                </p>
+              </div>
+
+              <div className="hidden h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-lg text-violet-600 sm:flex">
+                ✦
+              </div>
             </div>
 
             <form
               onSubmit={handleSubmit}
-              className="grid grid-cols-1 md:grid-cols-2 gap-5"
+              className="grid grid-cols-1 gap-5 md:grid-cols-2"
             >
 
               {/* TITLE */}
 
               <div className="md:col-span-2">
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Judul Konser
                 </label>
 
@@ -340,14 +352,14 @@ function AdminConcerts() {
                   onChange={handleChange}
                   placeholder="Contoh: Concertix Music Festival"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 />
               </div>
 
               {/* ARTIST */}
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Artist
                 </label>
 
@@ -356,7 +368,7 @@ function AdminConcerts() {
                   value={form.artist_id}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-white/10 bg-[#181818] px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 >
                   <option value="">
                     Pilih Artist
@@ -376,7 +388,7 @@ function AdminConcerts() {
               {/* CATEGORY */}
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Category
                 </label>
 
@@ -385,7 +397,7 @@ function AdminConcerts() {
                   value={form.category_id}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-white/10 bg-[#181818] px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 >
                   <option value="">
                     Pilih Category
@@ -405,7 +417,7 @@ function AdminConcerts() {
               {/* VENUE */}
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Venue
                 </label>
 
@@ -414,7 +426,7 @@ function AdminConcerts() {
                   value={form.venue_id}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-white/10 bg-[#181818] px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 >
                   <option value="">
                     Pilih Venue
@@ -434,7 +446,7 @@ function AdminConcerts() {
               {/* STATUS */}
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Status
                 </label>
 
@@ -442,7 +454,7 @@ function AdminConcerts() {
                   name="status"
                   value={form.status}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/10 bg-[#181818] px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 >
                   <option value="upcoming">
                     Upcoming
@@ -465,7 +477,7 @@ function AdminConcerts() {
               {/* DATE */}
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Tanggal Konser
                 </label>
 
@@ -475,14 +487,14 @@ function AdminConcerts() {
                   value={form.concert_date}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-white/10 bg-[#181818] px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 />
               </div>
 
               {/* TIME */}
 
               <div>
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Waktu Konser
                 </label>
 
@@ -492,14 +504,14 @@ function AdminConcerts() {
                   value={form.concert_time}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-white/10 bg-[#181818] px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 />
               </div>
 
               {/* POSTER */}
 
               <div className="md:col-span-2">
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   URL Poster
                 </label>
 
@@ -509,14 +521,14 @@ function AdminConcerts() {
                   value={form.poster}
                   onChange={handleChange}
                   placeholder="https://..."
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none focus:border-purple-500"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 />
               </div>
 
               {/* DESCRIPTION */}
 
               <div className="md:col-span-2">
-                <label className="block text-sm text-zinc-400 mb-2">
+                <label className="mb-2 block text-sm font-semibold text-neutral-700">
                   Deskripsi
                 </label>
 
@@ -526,18 +538,17 @@ function AdminConcerts() {
                   onChange={handleChange}
                   rows="5"
                   placeholder="Deskripsi konser..."
-                  className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 outline-none focus:border-purple-500 resize-none"
+                  className="w-full resize-none rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm leading-6 text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 />
               </div>
 
               {/* BUTTON */}
 
-              <div className="md:col-span-2 flex justify-end gap-3">
-
+              <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end md:col-span-2">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-xl border border-white/10 px-5 py-3 text-zinc-300 hover:bg-white/5 transition"
+                  className="rounded-xl border border-neutral-200 bg-white px-5 py-3 text-sm font-semibold text-neutral-600 transition hover:bg-neutral-50"
                 >
                   Batal
                 </button>
@@ -545,7 +556,7 @@ function AdminConcerts() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-xl bg-purple-600 px-6 py-3 font-semibold hover:bg-purple-700 transition disabled:opacity-50"
+                  className="rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving
                     ? "Menyimpan..."
@@ -553,9 +564,7 @@ function AdminConcerts() {
                     ? "Simpan Perubahan"
                     : "Tambah Konser"}
                 </button>
-
               </div>
-
             </form>
           </div>
         )}
@@ -564,166 +573,170 @@ function AdminConcerts() {
             CONCERT LIST
         ========================= */}
 
-        <div className="rounded-2xl border border-white/10 bg-[#111111] overflow-hidden">
+        <div className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-xl shadow-neutral-200/40">
 
-          <div className="px-6 py-5 border-b border-white/10">
+          {/* LIST HEADER */}
 
-            <h2 className="text-xl font-bold">
-              Daftar Konser
-            </h2>
+          <div className="flex flex-col gap-3 border-b border-neutral-100 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-7">
 
-            <p className="text-sm text-zinc-500 mt-1">
-              {concerts.length} konser terdaftar
-            </p>
+            <div>
+              <h2 className="text-xl font-black text-neutral-900">
+                Daftar Konser
+              </h2>
 
+              <p className="mt-1 text-sm text-neutral-500">
+                {concerts.length} konser terdaftar
+              </p>
+            </div>
+
+            <div className="inline-flex w-fit items-center rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700">
+              Concertix
+            </div>
           </div>
 
           {concerts.length === 0 ? (
-            <div className="px-6 py-16 text-center">
-              <p className="text-zinc-500">
-                Belum ada konser.
+            <div className="px-6 py-20 text-center">
+
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-2xl text-violet-500">
+                ♪
+              </div>
+
+              <h3 className="mt-5 font-bold text-neutral-800">
+                Belum ada konser
+              </h3>
+
+              <p className="mt-1 text-sm text-neutral-500">
+                Tambahkan konser pertama untuk mulai menjual tiket.
               </p>
+
+              <button
+                onClick={() => setShowForm(true)}
+                className="mt-5 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700"
+              >
+                + Tambah Konser
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
 
-              <table className="w-full text-left">
+              <table className="w-full min-w-[900px] text-left">
 
-                <thead className="border-b border-white/10 bg-white/[0.02]">
-
+                <thead className="border-b border-neutral-100 bg-neutral-50/70">
                   <tr>
-                    <th className="px-6 py-4 text-sm text-zinc-500">
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-400">
                       Konser
                     </th>
 
-                    <th className="px-6 py-4 text-sm text-zinc-500">
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-400">
                       Artist
                     </th>
 
-                    <th className="px-6 py-4 text-sm text-zinc-500">
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-400">
                       Venue
                     </th>
 
-                    <th className="px-6 py-4 text-sm text-zinc-500">
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-400">
                       Tanggal
                     </th>
 
-                    <th className="px-6 py-4 text-sm text-zinc-500">
+                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-neutral-400">
                       Status
                     </th>
 
-                    <th className="px-6 py-4 text-sm text-zinc-500 text-right">
+                    <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-neutral-400">
                       Action
                     </th>
                   </tr>
-
                 </thead>
 
                 <tbody>
-
                   {concerts.map((concert) => (
-
                     <tr
                       key={concert.id}
-                      className="border-b border-white/5 hover:bg-white/[0.02] transition"
+                      className="border-b border-neutral-100 transition last:border-0 hover:bg-violet-50/30"
                     >
 
                       {/* CONCERT */}
 
                       <td className="px-6 py-5">
-
                         <div className="flex items-center gap-4">
 
                           {concert.poster ? (
                             <img
                               src={concert.poster}
                               alt={concert.title}
-                              className="w-16 h-20 rounded-lg object-cover"
+                              className="h-20 w-16 rounded-xl object-cover shadow-sm"
                             />
                           ) : (
-                            <div className="w-16 h-20 rounded-lg bg-white/5 flex items-center justify-center text-xs text-zinc-600">
+                            <div className="flex h-20 w-16 items-center justify-center rounded-xl bg-violet-50 text-xs font-medium text-violet-400">
                               No Image
                             </div>
                           )}
 
-                          <div>
-
-                            <p className="font-semibold">
+                          <div className="min-w-0">
+                            <p className="max-w-[230px] truncate font-bold text-neutral-900">
                               {concert.title}
                             </p>
 
-                            <p className="text-sm text-zinc-500 mt-1">
-                              {concert.categories?.name ||
-                                "-"}
+                            <p className="mt-1 text-sm text-neutral-400">
+                              {concert.categories?.name || "-"}
                             </p>
-
                           </div>
-
                         </div>
-
                       </td>
 
                       {/* ARTIST */}
 
-                      <td className="px-6 py-5 text-zinc-300">
+                      <td className="px-6 py-5 text-sm font-medium text-neutral-600">
                         {concert.artists?.name || "-"}
                       </td>
 
                       {/* VENUE */}
 
                       <td className="px-6 py-5">
-
-                        <p className="text-zinc-300">
+                        <p className="text-sm font-semibold text-neutral-700">
                           {concert.venues?.name || "-"}
                         </p>
 
-                        <p className="text-sm text-zinc-500">
+                        <p className="mt-1 text-xs text-neutral-400">
                           {concert.venues?.city || "-"}
                         </p>
-
                       </td>
 
                       {/* DATE */}
 
                       <td className="px-6 py-5">
-
-                        <p className="text-zinc-300">
-                          {formatDate(
-                            concert.concert_date
-                          )}
+                        <p className="text-sm font-medium text-neutral-700">
+                          {formatDate(concert.concert_date)}
                         </p>
 
-                        <p className="text-sm text-zinc-500">
+                        <p className="mt-1 text-xs text-neutral-400">
                           {concert.concert_time || "-"}
                         </p>
-
                       </td>
 
                       {/* STATUS */}
 
                       <td className="px-6 py-5">
-
                         <span
-                          className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
+                          className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-bold capitalize ${getStatusClass(
                             concert.status
                           )}`}
                         >
                           {concert.status}
                         </span>
-
                       </td>
 
                       {/* ACTION */}
 
                       <td className="px-6 py-5">
-
                         <div className="flex justify-end gap-2">
 
                           <button
                             onClick={() =>
                               handleEdit(concert)
                             }
-                            className="rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 hover:bg-white/10 transition"
+                            className="rounded-lg border border-neutral-200 bg-white px-3.5 py-2 text-sm font-semibold text-neutral-600 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
                           >
                             Edit
                           </button>
@@ -732,26 +745,41 @@ function AdminConcerts() {
                             onClick={() =>
                               handleDelete(concert.id)
                             }
-                            className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition"
+                            className="rounded-lg border border-red-100 bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-100"
                           >
                             Hapus
                           </button>
 
                         </div>
-
                       </td>
 
                     </tr>
-
                   ))}
-
                 </tbody>
-
               </table>
-
             </div>
           )}
+        </div>
 
+        {/* =========================
+            BOTTOM INFO
+        ========================= */}
+
+        <div className="mt-6 flex flex-col gap-2 rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 to-fuchsia-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-bold text-neutral-800">
+              Concertix Admin
+            </p>
+
+            <p className="text-xs text-neutral-500">
+              Kelola seluruh konser dari satu tempat.
+            </p>
+          </div>
+
+          <span className="text-xs font-semibold text-violet-600">
+            {concerts.length} Concert
+            {concerts.length !== 1 ? "s" : ""}
+          </span>
         </div>
 
       </main>

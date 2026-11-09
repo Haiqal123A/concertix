@@ -1,610 +1,722 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
 
-  const profileRef = useRef(null);
+  const token = sessionStorage.getItem("token");
+  const userData = sessionStorage.getItem("user");
 
-  // =========================================================
-  // GET USER SESSION
-  // =========================================================
+  let user = null;
 
-  useEffect(() => {
-    const loadUser = () => {
-      const storedUser = sessionStorage.getItem("user");
+  try {
+    user = userData ? JSON.parse(userData) : null;
+  } catch {
+    user = null;
+  }
 
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (error) {
-          console.error("USER SESSION ERROR:", error);
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    };
+  const isHome = location.pathname === "/";
+  const isOrders = location.pathname === "/orders";
+  const isLogin = location.pathname === "/login";
+  const isRegister = location.pathname === "/register";
 
-    loadUser();
-  }, [location]);
-
-  // =========================================================
-  // CLOSE PROFILE WHEN CLICKING OUTSIDE
-  // =========================================================
+  // =====================================================
+  // ACTIVE SECTION
+  // =====================================================
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target)
-      ) {
-        setProfileOpen(false);
-      }
-    };
+    setActiveSection(location.hash.replace("#", ""));
+  }, [location.hash]);
 
-    document.addEventListener("mousedown", handleClickOutside);
+  // =====================================================
+  // CLOSE MOBILE
+  // =====================================================
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // =========================================================
-  // ACTIVE STATE
-  // =========================================================
-
-  const isActive = (path) => {
-    if (path === "/") {
-      return location.pathname === "/";
-    }
-
-    return location.pathname.startsWith(path);
-  };
-
-  // =========================================================
-  // EXPLORE
-  // =========================================================
-
-  const handleExplore = () => {
+  const closeMobile = () => {
     setMobileOpen(false);
-
-    if (location.pathname !== "/") {
-      navigate("/");
-
-      setTimeout(() => {
-        document
-          .getElementById("explore")
-          ?.scrollIntoView({
-            behavior: "smooth",
-          });
-      }, 100);
-    } else {
-      document
-        .getElementById("explore")
-        ?.scrollIntoView({
-          behavior: "smooth",
-        });
-    }
   };
 
-  // =========================================================
+  // =====================================================
   // LOGOUT
-  // =========================================================
+  // =====================================================
 
-  const handleLogout = () => {
+  const logout = () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
 
-    setUser(null);
-    setProfileOpen(false);
     setMobileOpen(false);
 
-    navigate("/login");
+    navigate("/login", {
+      replace: true,
+    });
   };
 
-  // =========================================================
-  // USER INITIAL
-  // =========================================================
+  // =====================================================
+  // HOME
+  // =====================================================
 
-  const userInitial = user?.name
-    ? user.name.charAt(0).toUpperCase()
-    : "U";
+  const goHome = () => {
+    closeMobile();
+
+    setActiveSection("");
+
+    navigate("/", {
+      replace: false,
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  // =====================================================
+  // SECTION NAVIGATION
+  // =====================================================
+
+  const goToSection = (section) => {
+    closeMobile();
+
+    setActiveSection(section);
+
+    // Kalau bukan Home
+    if (!isHome) {
+      navigate(`/#${section}`);
+      return;
+    }
+
+    // Kalau sudah di Home
+    const element = document.getElementById(section);
+
+    if (element) {
+      // update URL hash
+      window.history.pushState(null, "", `/#${section}`);
+
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  // =====================================================
+  // NAV ITEM
+  // =====================================================
+
+  const navItemClass = (active) => `
+    group relative
+    rounded-xl
+    px-4 py-2.5
+    text-sm font-bold
+    transition-all duration-300
+    ${
+      active
+        ? "text-slate-950"
+        : "text-slate-500 hover:text-slate-950"
+    }
+  `;
 
   return (
-    <>
-      {/* =====================================================
-          NAVBAR
-      ===================================================== */}
+    <header className="fixed left-0 right-0 top-0 z-50">
 
-      <nav className="sticky top-0 z-50 px-3 pt-3 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="relative rounded-2xl border border-white/[0.08] bg-neutral-950/75 shadow-2xl shadow-black/20 backdrop-blur-2xl">
+      {/* Glow */}
+      <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-[500px] -translate-x-1/2 bg-violet-400/10 blur-[90px]" />
 
-            {/* subtle gradient */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
-              <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-violet-600/10 blur-3xl" />
+      <div className="relative mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
 
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-fuchsia-600/10 blur-3xl" />
+        <nav
+          className="
+            rounded-[22px]
+            border border-white/70
+            bg-white/80
+            px-5 py-3
+            shadow-[0_10px_40px_rgba(15,23,42,0.07)]
+            backdrop-blur-2xl
+            sm:px-6
+          "
+        >
+
+          {/* =====================================================
+              MAIN NAVBAR
+          ===================================================== */}
+
+          <div className="flex items-center justify-between">
+
+            {/* =================================================
+                LOGO
+            ================================================= */}
+
+            <Link
+              to="/"
+              onClick={closeMobile}
+              className="group flex items-center gap-3"
+            >
+
+              <div
+                className="
+                  relative flex h-10 w-10
+                  items-center justify-center
+                  overflow-hidden rounded-xl
+                  bg-slate-950
+                  text-sm font-black text-white
+                  shadow-[0_8px_25px_rgba(15,23,42,0.18)]
+                  transition-all duration-300
+                  group-hover:-rotate-3
+                  group-hover:scale-105
+                  group-hover:bg-violet-600
+                "
+              >
+                <span className="relative z-10">
+                  C
+                </span>
+
+                <div
+                  className="
+                    absolute -right-3 -top-3
+                    h-8 w-8
+                    rounded-full
+                    bg-violet-500/40
+                    blur-md
+                  "
+                />
+              </div>
+
+              <div className="leading-none">
+
+                <p className="text-[15px] font-black tracking-tight text-slate-950">
+                  CONCERT
+                  <span className="text-violet-600">
+                    IX
+                  </span>
+                </p>
+
+                <p className="mt-1 hidden text-[8px] font-bold uppercase tracking-[0.22em] text-slate-400 sm:block">
+                  Live the moment
+                </p>
+
+              </div>
+
+            </Link>
+
+            {/* =================================================
+                DESKTOP NAVIGATION
+            ================================================= */}
+
+            <div className="hidden items-center gap-1 md:flex">
+
+              {/* HOME */}
+
+              <button
+                onClick={goHome}
+                className={navItemClass(
+                  isHome && !activeSection
+                )}
+              >
+                Home
+
+                <span
+                  className={`
+                    absolute bottom-0 left-1/2
+                    h-[3px]
+                    -translate-x-1/2
+                    rounded-full
+                    bg-violet-600
+                    transition-all duration-300
+                    ${
+                      isHome && !activeSection
+                        ? "w-6 opacity-100"
+                        : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100"
+                    }
+                  `}
+                />
+              </button>
+
+              {/* EXPLORE */}
+
+              <button
+                onClick={() => goToSection("explore")}
+                className={navItemClass(
+                  activeSection === "explore"
+                )}
+              >
+                Explore
+
+                <span
+                  className={`
+                    absolute bottom-0 left-1/2
+                    h-[3px]
+                    -translate-x-1/2
+                    rounded-full
+                    bg-violet-600
+                    transition-all duration-300
+                    ${
+                      activeSection === "explore"
+                        ? "w-6 opacity-100"
+                        : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100"
+                    }
+                  `}
+                />
+              </button>
+
+              {/* WHY */}
+
+              <button
+                onClick={() => goToSection("why")}
+                className={navItemClass(
+                  activeSection === "why"
+                )}
+              >
+                Why Concertix
+
+                <span
+                  className={`
+                    absolute bottom-0 left-1/2
+                    h-[3px]
+                    -translate-x-1/2
+                    rounded-full
+                    bg-violet-600
+                    transition-all duration-300
+                    ${
+                      activeSection === "why"
+                        ? "w-6 opacity-100"
+                        : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100"
+                    }
+                  `}
+                />
+              </button>
+
+              {/* ORDERS */}
+
+              {token && (
+                <Link
+                  to="/orders"
+                  className={navItemClass(isOrders)}
+                >
+                  My Orders
+
+                  <span
+                    className={`
+                      absolute bottom-0 left-1/2
+                      h-[3px]
+                      -translate-x-1/2
+                      rounded-full
+                      bg-violet-600
+                      transition-all duration-300
+                      ${
+                        isOrders
+                          ? "w-6 opacity-100"
+                          : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100"
+                      }
+                    `}
+                  />
+                </Link>
+              )}
+
             </div>
 
-            <div className="relative flex h-[70px] items-center justify-between px-4 sm:px-6">
+            {/* =================================================
+                RIGHT SIDE
+            ================================================= */}
 
-              {/* =================================================
-                  LOGO
-              ================================================= */}
+            <div className="hidden items-center gap-2 md:flex">
 
-              <Link
-                to="/"
-                onClick={() => setMobileOpen(false)}
-                className="group flex items-center gap-2"
+              {token && user ? (
+
+                <>
+                  {/* USER */}
+
+                  <div
+                    className="
+                      flex items-center gap-3
+                      rounded-xl
+                      border border-slate-200/80
+                      bg-slate-50/80
+                      px-3 py-2
+                      transition-all duration-300
+                      hover:border-violet-200
+                      hover:bg-violet-50/60
+                    "
+                  >
+
+                    <div
+                      className="
+                        flex h-8 w-8
+                        items-center justify-center
+                        rounded-lg
+                        bg-gradient-to-br
+                        from-violet-500
+                        via-purple-500
+                        to-fuchsia-500
+                        text-xs font-black text-white
+                        shadow-lg shadow-violet-500/20
+                      "
+                    >
+                      {user.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+
+                    <div className="max-w-[120px]">
+
+                      <p className="truncate text-xs font-black text-slate-900">
+                        {user.name || "User"}
+                      </p>
+
+                      <p className="mt-0.5 text-[10px] capitalize text-slate-400">
+                        {user.role || "user"}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  {/* ADMIN DASHBOARD - Jika user adalah admin */}
+                  {user.role === "admin" && (
+                    <Link
+                      to="/admin"
+                      className="
+                        rounded-xl
+                        border border-violet-200
+                        bg-violet-50
+                        px-4 py-2.5
+                        text-sm font-bold
+                        text-violet-600
+                        transition-all duration-300
+                        hover:-translate-y-0.5
+                        hover:border-violet-300
+                        hover:bg-violet-100
+                      "
+                    >
+                      🔐 Admin Dashboard
+                    </Link>
+                  )}
+
+                  {/* LOGOUT */}
+
+                  <button
+                    onClick={logout}
+                    className="
+                      rounded-xl
+                      border border-slate-200
+                      bg-white
+                      px-4 py-2.5
+                      text-sm font-bold
+                      text-slate-600
+                      transition-all duration-300
+                      hover:-translate-y-0.5
+                      hover:border-red-200
+                      hover:bg-red-50
+                      hover:text-red-500
+                    "
+                  >
+                    Logout
+                  </button>
+                </>
+
+              ) : (
+
+                <>
+                  {/* REGISTER */}
+
+                  <Link
+                    to="/register"
+                    className={`
+                      rounded-xl
+                      px-4 py-2.5
+                      text-sm font-bold
+                      transition-all duration-300
+                      ${
+                        isRegister
+                          ? "bg-violet-50 text-violet-600 ring-1 ring-violet-200"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-violet-600"
+                      }
+                    `}
+                  >
+                    Register
+                  </Link>
+
+                  {/* LOGIN */}
+
+                  <Link
+                    to="/login"
+                    className={`
+                      rounded-xl
+                      px-5 py-2.5
+                      text-sm font-bold
+                      transition-all duration-300
+                      ${
+                        isLogin
+                          ? "bg-violet-600 text-white shadow-lg shadow-violet-500/25"
+                          : "bg-slate-950 text-white shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 hover:bg-violet-600"
+                      }
+                    `}
+                  >
+                    Login
+                  </Link>
+                </>
+
+              )}
+
+            </div>
+
+            {/* =================================================
+                MOBILE
+            ================================================= */}
+
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="
+                flex h-10 w-10
+                items-center justify-center
+                rounded-xl
+                border border-slate-200
+                bg-white
+                text-slate-700
+                transition-all duration-300
+                hover:border-violet-300
+                hover:bg-violet-50
+                hover:text-violet-600
+                md:hidden
+              "
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+            >
+              <span
+                className={`text-lg transition-transform duration-300 ${
+                  mobileOpen ? "rotate-90" : ""
+                }`}
               >
-                {/* Logo Icon */}
+                {mobileOpen ? "✕" : "☰"}
+              </span>
+            </button>
 
-                <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 shadow-lg shadow-violet-500/20 transition duration-300 group-hover:scale-105 group-hover:shadow-violet-500/40">
-                  <div className="absolute inset-[1px] rounded-[10px] bg-neutral-950/20" />
+          </div>
 
-                  <span className="relative text-lg font-black text-white">
-                    C
-                  </span>
-                </div>
+          {/* =====================================================
+              MOBILE MENU
+          ===================================================== */}
 
-                {/* Logo Text */}
+          {mobileOpen && (
+            <div className="mt-4 border-t border-slate-200/80 pt-4 md:hidden">
 
-                <div className="leading-none">
-                  <p className="text-[19px] font-black tracking-tight text-white">
-                    Concert
-                    <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                      ix
-                    </span>
-                  </p>
-
-                  <p className="mt-1 hidden text-[8px] font-semibold uppercase tracking-[0.25em] text-neutral-500 sm:block">
-                    Live the moment
-                  </p>
-                </div>
-              </Link>
-
-              {/* =================================================
-                  DESKTOP NAVIGATION
-              ================================================= */}
-
-              <div className="absolute left-1/2 hidden -translate-x-1/2 items-center rounded-xl border border-white/[0.06] bg-white/[0.025] p-1 md:flex">
+              <div className="grid gap-2">
 
                 {/* HOME */}
 
-                <Link
-                  to="/"
-                  className={`relative rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                    isActive("/")
-                      ? "text-white"
-                      : "text-neutral-500 hover:text-white"
-                  }`}
+                <button
+                  onClick={goHome}
+                  className={`
+                    flex items-center gap-3
+                    rounded-xl px-4 py-3
+                    text-left
+                    text-sm font-bold
+                    transition-all duration-300
+                    ${
+                      isHome && !activeSection
+                        ? "bg-slate-950 text-white shadow-lg"
+                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
+                    }
+                  `}
                 >
-                  {isActive("/") && (
-                    <span className="absolute inset-0 -z-10 rounded-lg bg-white/[0.08]" />
-                  )}
-
-                  <span className="relative">
-                    Home
-                  </span>
-                </Link>
+                  <span>⌂</span>
+                  Home
+                </button>
 
                 {/* EXPLORE */}
 
                 <button
-                  onClick={handleExplore}
-                  className={`relative rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                    location.hash === "#explore"
-                      ? "text-white"
-                      : "text-neutral-500 hover:text-white"
-                  }`}
+                  onClick={() => goToSection("explore")}
+                  className={`
+                    flex items-center gap-3
+                    rounded-xl px-4 py-3
+                    text-left
+                    text-sm font-bold
+                    transition-all duration-300
+                    ${
+                      activeSection === "explore"
+                        ? "bg-slate-950 text-white shadow-lg"
+                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
+                    }
+                  `}
                 >
-                  <span className="mr-2 text-xs text-violet-400">
-                    ✦
-                  </span>
-
+                  <span>✦</span>
                   Explore
                 </button>
 
-                {/* MY ORDERS */}
+                {/* WHY */}
 
-                {user?.role === "user" && (
+                <button
+                  onClick={() => goToSection("why")}
+                  className={`
+                    flex items-center gap-3
+                    rounded-xl px-4 py-3
+                    text-left
+                    text-sm font-bold
+                    transition-all duration-300
+                    ${
+                      activeSection === "why"
+                        ? "bg-slate-950 text-white shadow-lg"
+                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
+                    }
+                  `}
+                >
+                  <span>◈</span>
+                  Why Concertix
+                </button>
+
+                {/* ORDERS */}
+
+                {token && (
                   <Link
                     to="/orders"
-                    className={`relative rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                      isActive("/orders")
-                        ? "text-white"
-                        : "text-neutral-500 hover:text-white"
-                    }`}
+                    onClick={closeMobile}
+                    className={`
+                      flex items-center gap-3
+                      rounded-xl px-4 py-3
+                      text-sm font-bold
+                      transition-all duration-300
+                      ${
+                        isOrders
+                          ? "bg-slate-950 text-white shadow-lg"
+                          : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
+                      }
+                    `}
                   >
-                    {isActive("/orders") && (
-                      <span className="absolute inset-0 -z-10 rounded-lg bg-white/[0.08]" />
-                    )}
-
-                    <span className="mr-2 text-xs text-violet-400">
-                      ◈
-                    </span>
-
+                    <span>◎</span>
                     My Orders
                   </Link>
                 )}
 
-                {/* ADMIN */}
+                <div className="my-2 h-px bg-slate-200" />
 
-                {user?.role === "admin" && (
-                  <Link
-                    to="/admin"
-                    className={`relative rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
-                      location.pathname.startsWith("/admin")
-                        ? "text-white"
-                        : "text-neutral-500 hover:text-white"
-                    }`}
-                  >
-                    {location.pathname.startsWith("/admin") && (
-                      <span className="absolute inset-0 -z-10 rounded-lg bg-violet-500/10" />
+                {/* USER */}
+
+                {token && user ? (
+
+                  <>
+                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+
+                      <div
+                        className="
+                          flex h-10 w-10
+                          items-center justify-center
+                          rounded-xl
+                          bg-gradient-to-br
+                          from-violet-500
+                          to-fuchsia-500
+                          font-black text-white
+                        "
+                      >
+                        {user.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+
+                      <div>
+
+                        <p className="text-sm font-black text-slate-900">
+                          {user.name || "User"}
+                        </p>
+
+                        <p className="text-xs capitalize text-slate-400">
+                          {user.role || "user"}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    {/* ADMIN DASHBOARD - Mobile */}
+                    {user.role === "admin" && (
+                      <Link
+                        to="/admin"
+                        onClick={closeMobile}
+                        className="
+                          flex items-center gap-3
+                          rounded-xl
+                          bg-violet-50
+                          px-4 py-3
+                          text-left
+                          text-sm font-bold
+                          text-violet-600
+                          transition-all duration-300
+                          hover:bg-violet-100
+                        "
+                      >
+                        <span>🔐</span>
+                        Admin Dashboard
+                      </Link>
                     )}
 
-                    <span className="mr-2 text-xs text-violet-400">
-                      ◆
-                    </span>
+                    <button
+                      onClick={logout}
+                      className="
+                        flex items-center gap-3
+                        rounded-xl
+                        bg-red-50
+                        px-4 py-3
+                        text-left
+                        text-sm font-bold
+                        text-red-500
+                        transition-all duration-300
+                        hover:bg-red-100
+                      "
+                    >
+                      <span>↪</span>
+                      Logout
+                    </button>
+                  </>
 
-                    Admin
-                  </Link>
-                )}
-              </div>
+                ) : (
 
-              {/* =================================================
-                  RIGHT SIDE
-              ================================================= */}
+                  <>
+                    <Link
+                      to="/register"
+                      onClick={closeMobile}
+                      className="
+                        flex items-center justify-center
+                        rounded-xl
+                        border border-slate-200
+                        bg-white
+                        px-4 py-3
+                        text-sm font-bold
+                        text-slate-700
+                        transition-all duration-300
+                        hover:border-violet-300
+                        hover:bg-violet-50
+                        hover:text-violet-600
+                      "
+                    >
+                      Create Account
+                    </Link>
 
-              <div className="flex items-center gap-2">
-
-                {/* NOT LOGGED IN */}
-
-                {!user && (
-                  <div className="hidden items-center gap-2 sm:flex">
                     <Link
                       to="/login"
-                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-neutral-400 transition hover:text-white"
+                      onClick={closeMobile}
+                      className="
+                        flex items-center justify-center
+                        rounded-xl
+                        bg-slate-950
+                        px-4 py-3
+                        text-sm font-bold
+                        text-white
+                        transition-all duration-300
+                        hover:bg-violet-600
+                      "
                     >
                       Login
                     </Link>
+                  </>
 
-                    <Link
-                      to="/register"
-                      className="group relative overflow-hidden rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-neutral-950 transition duration-300 hover:-translate-y-0.5 hover:bg-violet-100"
-                    >
-                      <span className="relative z-10">
-                        Get Started
-                      </span>
-                    </Link>
-                  </div>
                 )}
 
-                {/* LOGGED IN */}
-
-                {user && (
-                  <div
-                    ref={profileRef}
-                    className="relative hidden sm:block"
-                  >
-                    <button
-                      onClick={() =>
-                        setProfileOpen((prev) => !prev)
-                      }
-                      className={`flex items-center gap-3 rounded-xl border px-2 py-1.5 transition-all duration-300 ${
-                        profileOpen
-                          ? "border-violet-500/30 bg-violet-500/10"
-                          : "border-white/[0.07] bg-white/[0.03] hover:border-white/10 hover:bg-white/[0.06]"
-                      }`}
-                    >
-                      {/* Avatar */}
-
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xs font-black text-white shadow-lg shadow-violet-500/20">
-                        {userInitial}
-                      </div>
-
-                      {/* Name */}
-
-                      <div className="hidden text-left lg:block">
-                        <p className="max-w-[110px] truncate text-xs font-semibold text-white">
-                          {user.name}
-                        </p>
-
-                        <p className="mt-0.5 text-[10px] capitalize text-neutral-500">
-                          {user.role}
-                        </p>
-                      </div>
-
-                      {/* Arrow */}
-
-                      <span
-                        className={`text-xs text-neutral-500 transition-transform duration-300 ${
-                          profileOpen ? "rotate-180" : ""
-                        }`}
-                      >
-                        ▾
-                      </span>
-                    </button>
-
-                    {/* =================================================
-                        PROFILE DROPDOWN
-                    ================================================= */}
-
-                    {profileOpen && (
-                      <div className="absolute right-0 top-[calc(100%+10px)] w-64 overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/95 p-2 shadow-2xl shadow-black/40 backdrop-blur-2xl">
-
-                        {/* Profile Header */}
-
-                        <div className="mb-2 rounded-xl bg-white/[0.04] p-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 font-bold text-white">
-                              {userInitial}
-                            </div>
-
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-white">
-                                {user.name}
-                              </p>
-
-                              <p className="truncate text-xs text-neutral-500">
-                                {user.email || "Concertix User"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Menu */}
-
-                        {user.role === "user" && (
-                          <Link
-                            to="/orders"
-                            onClick={() =>
-                              setProfileOpen(false)
-                            }
-                            className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-neutral-400 transition hover:bg-white/[0.06] hover:text-white"
-                          >
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.05] text-violet-400">
-                              ◈
-                            </span>
-
-                            <div>
-                              <p className="font-medium">
-                                My Orders
-                              </p>
-
-                              <p className="text-[11px] text-neutral-600">
-                                View your tickets
-                              </p>
-                            </div>
-                          </Link>
-                        )}
-
-                        {user.role === "admin" && (
-                          <Link
-                            to="/admin"
-                            onClick={() =>
-                              setProfileOpen(false)
-                            }
-                            className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-neutral-400 transition hover:bg-white/[0.06] hover:text-white"
-                          >
-                            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.05] text-violet-400">
-                              ◆
-                            </span>
-
-                            <div>
-                              <p className="font-medium">
-                                Admin Panel
-                              </p>
-
-                              <p className="text-[11px] text-neutral-600">
-                                Manage Concertix
-                              </p>
-                            </div>
-                          </Link>
-                        )}
-
-                        <div className="my-2 h-px bg-white/[0.06]" />
-
-                        {/* Logout */}
-
-                        <button
-                          onClick={handleLogout}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-neutral-400 transition hover:bg-red-500/10 hover:text-red-400"
-                        >
-                          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/5">
-                            ↪
-                          </span>
-
-                          <div>
-                            <p className="font-medium">
-                              Logout
-                            </p>
-
-                            <p className="text-[11px] text-neutral-600">
-                              Sign out from Concertix
-                            </p>
-                          </div>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* =================================================
-                    MOBILE BUTTON
-                ================================================= */}
-
-                <button
-                  onClick={() =>
-                    setMobileOpen((prev) => !prev)
-                  }
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-neutral-300 transition hover:bg-white/[0.08] hover:text-white md:hidden"
-                  aria-label="Toggle menu"
-                >
-                  <div className="flex w-5 flex-col gap-1.5">
-                    <span
-                      className={`h-[2px] w-full rounded-full bg-current transition duration-300 ${
-                        mobileOpen
-                          ? "translate-y-[4px] rotate-45"
-                          : ""
-                      }`}
-                    />
-
-                    <span
-                      className={`h-[2px] w-full rounded-full bg-current transition duration-300 ${
-                        mobileOpen
-                          ? "-rotate-45"
-                          : ""
-                      }`}
-                    />
-                  </div>
-                </button>
               </div>
             </div>
+          )}
 
-            {/* =====================================================
-                MOBILE MENU
-            ===================================================== */}
-
-            {mobileOpen && (
-              <div className="border-t border-white/[0.07] px-4 pb-4 pt-3 md:hidden">
-                <div className="space-y-1">
-
-                  {/* Home */}
-
-                  <Link
-                    to="/"
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition ${
-                      isActive("/")
-                        ? "bg-white/[0.08] text-white"
-                        : "text-neutral-400 hover:bg-white/[0.05] hover:text-white"
-                    }`}
-                  >
-                    <span className="text-base">
-                      ⌂
-                    </span>
-
-                    Home
-                  </Link>
-
-                  {/* Explore */}
-
-                  <button
-                    onClick={handleExplore}
-                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-sm font-medium text-neutral-400 transition hover:bg-white/[0.05] hover:text-white"
-                  >
-                    <span className="text-base text-violet-400">
-                      ✦
-                    </span>
-
-                    Explore Concerts
-                  </button>
-
-                  {/* Orders */}
-
-                  {user?.role === "user" && (
-                    <Link
-                      to="/orders"
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition ${
-                        isActive("/orders")
-                          ? "bg-white/[0.08] text-white"
-                          : "text-neutral-400 hover:bg-white/[0.05] hover:text-white"
-                      }`}
-                    >
-                      <span className="text-base text-violet-400">
-                        ◈
-                      </span>
-
-                      My Orders
-                    </Link>
-                  )}
-
-                  {/* Admin */}
-
-                  {user?.role === "admin" && (
-                    <Link
-                      to="/admin"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-neutral-400 transition hover:bg-white/[0.05] hover:text-white"
-                    >
-                      <span className="text-base text-violet-400">
-                        ◆
-                      </span>
-
-                      Admin Panel
-                    </Link>
-                  )}
-
-                  {/* Divider */}
-
-                  <div className="my-2 h-px bg-white/[0.06]" />
-
-                  {/* Not logged in */}
-
-                  {!user && (
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <Link
-                        to="/login"
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-xl border border-white/[0.08] px-4 py-3 text-center text-sm font-medium text-neutral-300 transition hover:bg-white/[0.05]"
-                      >
-                        Login
-                      </Link>
-
-                      <Link
-                        to="/register"
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-xl bg-white px-4 py-3 text-center text-sm font-bold text-neutral-950 transition hover:bg-violet-100"
-                      >
-                        Register
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* User */}
-
-                  {user && (
-                    <div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-black text-white">
-                          {userInitial}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-white">
-                            {user.name}
-                          </p>
-
-                          <p className="text-xs capitalize text-neutral-500">
-                            {user.role}
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={handleLogout}
-                          className="rounded-lg p-2 text-neutral-500 transition hover:bg-red-500/10 hover:text-red-400"
-                        >
-                          ↪
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
-    </>
+        </nav>
+      </div>
+    </header>
   );
 }
 
