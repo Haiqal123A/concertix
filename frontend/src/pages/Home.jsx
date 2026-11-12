@@ -2,11 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
+  CalendarDays,
+  MapPin,
   ShieldCheck,
   Ticket,
   Zap,
 } from "lucide-react";
 import api from "../services/api";
+
+const formatConcertDate = (date) => {
+  if (!date) return "Tanggal belum tersedia";
+  const parsedDate = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) return "Tanggal belum tersedia";
+
+  return parsedDate.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  });
+};
 
 function Home() {
   const [concerts, setConcerts] = useState([]);
@@ -63,7 +78,13 @@ function Home() {
   // STATISTICS
   // =====================================================
 
-  const featuredConcert = concerts[0];
+  const activeConcerts = concerts
+    .filter((concert) =>
+      ["upcoming", "ongoing"].includes(concert.status || "upcoming")
+    )
+    .slice(0, 3);
+
+  const featuredConcert = activeConcerts[0] || concerts[0];
 
   const totalConcerts = concerts.length;
 
@@ -76,6 +97,8 @@ function Home() {
     concerts
       .map(
         (concert) =>
+          concert.venue_address ||
+          concert.venues?.address ||
           concert.venues?.name ||
           concert.venue?.name
       )
@@ -89,17 +112,17 @@ function Home() {
           HERO
       ===================================================== */}
 
-      <section className="relative mx-4 mt-24 overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 pt-12 text-white shadow-xl shadow-violet-950/10 sm:mx-6 xl:mx-auto xl:max-w-[1360px]">
+      <section className="relative mx-4 mt-24 overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 pt-12 text-white shadow-xl shadow-slate-950/10 sm:mx-6 xl:mx-auto xl:max-w-[1360px]">
 
         {/* Background */}
 
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900" />
 
-        <div className="absolute -right-40 -top-40 h-[550px] w-[550px] rounded-full bg-violet-600/25 blur-[120px]" />
+        <div className="absolute -right-40 -top-40 h-[550px] w-[550px] rounded-full bg-sky-500/10 blur-[120px]" />
 
-        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-fuchsia-600/15 blur-[120px]" />
+        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[120px]" />
 
-        <div className="absolute right-[35%] top-[35%] h-40 w-40 rounded-full bg-purple-500/15 blur-[80px]" />
+        <div className="absolute right-[35%] top-[35%] h-40 w-40 rounded-full bg-slate-400/10 blur-[80px]" />
 
         {/* =====================================================
             HERO CONTENT
@@ -127,7 +150,7 @@ function Home() {
 
                 <br />
 
-                <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-slate-100 via-slate-300 to-sky-200 bg-clip-text text-transparent">
                   unforgettable
                 </span>
 
@@ -145,7 +168,7 @@ function Home() {
                 yang sesuai, dan nikmati pengalaman
                 event terbaik bersama{" "}
 
-                <span className="font-black text-violet-600">
+                <span className="font-black text-sky-300">
                   Concertix.
                 </span>
 
@@ -161,7 +184,7 @@ function Home() {
 
                 <Link
                   to="/concerts"
-                  className="group rounded-xl bg-violet-700 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-950/30 transition-all hover:-translate-y-1 hover:bg-violet-600"
+                  className="group rounded-xl bg-sky-700 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-950/30 transition-all hover:-translate-y-1 hover:bg-sky-600"
                 >
                   Semua Konser
 
@@ -199,8 +222,8 @@ function Home() {
                     backdrop-blur-xl
                     transition-all duration-300
                     hover:-translate-y-1
-                    hover:border-violet-300/40
-                    hover:shadow-[0_18px_45px_rgba(124,58,237,0.10)]
+                    hover:border-sky-300/40
+                    hover:shadow-[0_18px_45px_rgba(14,165,233,0.10)]
                   "
                 >
 
@@ -210,8 +233,8 @@ function Home() {
                       className="
                         flex h-8 w-8 items-center justify-center
                         rounded-lg
-                        bg-violet-500/15
-                        text-violet-300
+                        bg-sky-500/15
+                        text-sky-300
                         transition-transform duration-300
                         group-hover:scale-110
                       "
@@ -251,8 +274,8 @@ function Home() {
                     backdrop-blur-xl
                     transition-all duration-300
                     hover:-translate-y-1
-                    hover:border-fuchsia-300/40
-                    hover:shadow-[0_18px_45px_rgba(217,70,239,0.10)]
+                    hover:border-cyan-300/40
+                    hover:shadow-[0_18px_45px_rgba(6,182,212,0.10)]
                   "
                 >
 
@@ -262,8 +285,8 @@ function Home() {
                       className="
                         flex h-8 w-8 items-center justify-center
                         rounded-lg
-                        bg-fuchsia-500/15
-                        text-fuchsia-300
+                        bg-cyan-500/15
+                        text-cyan-300
                         transition-transform duration-300
                         group-hover:scale-110
                       "
@@ -303,8 +326,8 @@ function Home() {
                     backdrop-blur-xl
                     transition-all duration-300
                     hover:-translate-y-1
-                    hover:border-indigo-300/40
-                    hover:shadow-[0_18px_45px_rgba(79,70,229,0.10)]
+                    hover:border-slate-300/40
+                    hover:shadow-[0_18px_45px_rgba(148,163,184,0.10)]
                   "
                 >
 
@@ -314,8 +337,8 @@ function Home() {
                       className="
                         flex h-8 w-8 items-center justify-center
                         rounded-lg
-                        bg-indigo-500/15
-                        text-indigo-300
+                        bg-slate-500/15
+                        text-slate-300
                         transition-transform duration-300
                         group-hover:scale-110
                       "
@@ -355,7 +378,7 @@ function Home() {
 
                 <Link
                   to={`/concert/${featuredConcert.id}`}
-                  className="group relative block overflow-hidden rounded-[36px] border border-white bg-white shadow-[0_35px_100px_rgba(76,29,149,0.18)] ring-1 ring-slate-200/60"
+                  className="group relative block overflow-hidden rounded-[36px] border border-white bg-white shadow-[0_35px_100px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/60"
                 >
 
                   <div className="relative h-[600px]">
@@ -377,7 +400,7 @@ function Home() {
 
                     <div className="absolute bottom-0 left-0 right-0 p-9">
 
-                      <p className="mb-3 text-sm font-bold text-violet-300">
+                      <p className="mb-3 text-sm font-bold text-sky-200">
                         {featuredConcert.concert_date}
                       </p>
 
@@ -392,7 +415,7 @@ function Home() {
                         </p>
                       )}
 
-                      <div className="mt-6 inline-flex items-center rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition group-hover:bg-violet-100">
+                      <div className="mt-6 inline-flex items-center rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition group-hover:bg-slate-100">
 
                         View Concert
 
@@ -443,11 +466,11 @@ function Home() {
 
       <section
         id="explore"
-        className="mx-4 my-8 max-w-[1360px] overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 text-white shadow-xl shadow-violet-950/10 sm:mx-6 xl:mx-auto"
+        className="mx-4 my-8 max-w-[1360px] overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 text-white shadow-xl shadow-slate-950/10 sm:mx-6 xl:mx-auto"
       >
         <div className="relative isolate overflow-hidden rounded-[24px] px-6 py-10 sm:px-10 sm:py-12">
-          <div className="pointer-events-none absolute -right-16 -top-32 -z-10 h-80 w-80 rounded-full bg-violet-600/25 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-40 left-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-500/15 blur-3xl" />
+          <div className="pointer-events-none absolute -right-16 -top-32 -z-10 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 left-1/3 -z-10 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
           <div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl">
 
@@ -461,12 +484,103 @@ function Home() {
             </div>
             <Link
               to="/concerts"
-              className="inline-flex w-fit shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-slate-950 transition hover:-translate-y-0.5 hover:bg-violet-100"
+              className="inline-flex w-fit shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100"
             >
               Lihat semua konser
               <ArrowUpRight size={17} />
             </Link>
           </div>
+
+          {loading && (
+            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((item) => (
+                <div
+                  key={item}
+                  className="animate-pulse overflow-hidden rounded-2xl border border-white/10 bg-white/[0.07]"
+                >
+                  <div className="aspect-[16/9] bg-white/10" />
+                  <div className="space-y-3 p-4">
+                    <div className="h-4 w-3/4 rounded bg-white/10" />
+                    <div className="h-3 w-1/2 rounded bg-white/10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && !error && activeConcerts.length > 0 && (
+            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {activeConcerts.map((concert) => {
+                const venue =
+                  concert.venue_address ||
+                  concert.venues?.address ||
+                  concert.venues?.name;
+
+                return (
+                  <Link
+                    key={concert.id}
+                    to={`/concert/${concert.id}`}
+                    className="group min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.07] transition hover:-translate-y-1 hover:border-white/25 hover:bg-white/10"
+                  >
+                    <div className="relative aspect-[16/9] overflow-hidden bg-slate-800">
+                      {concert.poster ? (
+                        <img
+                          src={concert.poster}
+                          alt=""
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-white/50">
+                          <Ticket size={30} strokeWidth={1.6} />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent" />
+                      <span className="absolute left-3 top-3 rounded-full border border-white/20 bg-slate-950/55 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
+                        {concert.status === "ongoing"
+                          ? "Berlangsung"
+                          : "Akan datang"}
+                      </span>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-white">
+                        {concert.title}
+                      </h3>
+                      <p className="mt-1 truncate text-xs text-slate-300">
+                        {concert.artist_names ||
+                          concert.artists?.name ||
+                          "Artis belum diisi"}
+                      </p>
+                      <div className="mt-3 space-y-2 border-t border-white/10 pt-3 text-xs text-slate-300">
+                        <p className="flex items-center gap-2">
+                          <CalendarDays
+                            size={14}
+                            className="shrink-0 text-slate-400"
+                          />
+                          {formatConcertDate(concert.concert_date)}
+                        </p>
+                        {venue && (
+                          <p className="flex min-w-0 items-center gap-2">
+                            <MapPin
+                              size={14}
+                              className="shrink-0 text-slate-400"
+                            />
+                            <span className="truncate">{venue}</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {!loading && !error && activeConcerts.length === 0 && (
+            <p className="mt-7 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-8 text-center text-sm text-slate-300">
+              Belum ada konser aktif saat ini.
+            </p>
+          )}
         </div>
 
       </section>

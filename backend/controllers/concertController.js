@@ -1,4 +1,12 @@
 const supabase = require("../config/supabase");
+const { randomUUID } = require("crypto");
+
+const posterBucket = "concert-posters";
+const posterExtensions = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 const getJakartaDate = () =>
   new Intl.DateTimeFormat("en-CA", {
@@ -54,6 +62,11 @@ const addConcertDisplayStatus = async (concerts) => {
 
       return {
         ...concert,
+        artist_count: String(
+          concert.artist_names || concert.artists?.name || ""
+        )
+          .split(/[,\n;]+/)
+          .filter((name) => name.trim()).length,
         configured_status: configuredStatus,
         status,
       };
@@ -164,13 +177,58 @@ exports.getConcertById = async (req, res) => {
   }
 };
 
+exports.uploadPoster = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "Pilih file poster berformat JPG, PNG, atau WebP.",
+    });
+  }
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(503).json({
+      success: false,
+      message: "Upload poster belum dikonfigurasi di server.",
+    });
+  }
+
+  try {
+    const extension = posterExtensions[req.file.mimetype];
+    const filePath = `${randomUUID()}.${extension}`;
+    const { data, error } = await supabase.storage
+      .from(posterBucket)
+      .upload(filePath, req.file.buffer, {
+        cacheControl: "31536000",
+        contentType: req.file.mimetype,
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    const { data: publicUrl } = supabase.storage
+      .from(posterBucket)
+      .getPublicUrl(data.path);
+
+    res.status(201).json({
+      success: true,
+      data: { url: publicUrl.publicUrl },
+    });
+  } catch (err) {
+    console.error("UPLOAD CONCERT POSTER ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Gagal mengunggah poster.",
+    });
+  }
+};
+
 // POST konser
 exports.createConcert = async (req, res) => {
   try {
     const {
       category_id,
-      artist_id,
-      venue_id,
+      artist_names,
+      venue_address,
       title,
       poster,
       description,
@@ -184,8 +242,10 @@ exports.createConcert = async (req, res) => {
       .insert([
         {
           category_id,
-          artist_id,
-          venue_id,
+          artist_id: null,
+          artist_names: artist_names?.trim() || null,
+          venue_id: null,
+          venue_address: venue_address?.trim() || null,
           title,
           poster,
           description,
@@ -219,8 +279,8 @@ exports.updateConcert = async (req, res) => {
 
     const {
       category_id,
-      artist_id,
-      venue_id,
+      artist_names,
+      venue_address,
       title,
       poster,
       description,
@@ -233,8 +293,10 @@ exports.updateConcert = async (req, res) => {
       .from("concerts")
       .update({
         category_id,
-        artist_id,
-        venue_id,
+        artist_id: null,
+        artist_names: artist_names?.trim() || null,
+        venue_id: null,
+        venue_address: venue_address?.trim() || null,
         title,
         poster,
         description,

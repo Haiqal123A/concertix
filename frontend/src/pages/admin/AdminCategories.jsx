@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useConfirmation } from "../../components/useConfirmation";
 import api from "../../services/api";
 
 function AdminCategories() {
+  const confirm = useConfirmation();
   const [categories, setCategories] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,29 @@ function AdminCategories() {
   };
 
   useEffect(() => {
-    getCategories();
+    let active = true;
+
+    api
+      .get("/categories")
+      .then((response) => {
+        if (!active) return;
+        setError("");
+        setCategories(response.data.data || []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error("GET CATEGORIES ERROR:", err);
+        setError(
+          err.response?.data?.message || "Gagal mengambil data kategori."
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // =========================
@@ -137,9 +161,11 @@ function AdminCategories() {
   // =========================
 
   const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Apakah kamu yakin ingin menghapus kategori ini?"
-    );
+    const confirmed = await confirm({
+      title: "Hapus kategori?",
+      message: "Kategori ini akan dihapus dan tidak dapat dipulihkan.",
+      confirmLabel: "Hapus kategori",
+    });
 
     if (!confirmed) return;
 

@@ -24,6 +24,8 @@
 
   .issued-ticket {
     break-inside: avoid;
+    width: 100% !important;
+    max-width: none !important;
     box-shadow: none !important;
     margin-bottom: 12mm;
   }
@@ -35,6 +37,13 @@
 }
 
 .ticket-qr-image {
-  width: 180px;
-  height: 180px;
+  width: 136px;
+  height: 136px;
+}
+
+@media (min-width: 640px) {
+  .ticket-qr-image {
+    width: 152px;
+    height: 152px;
+  }
 }

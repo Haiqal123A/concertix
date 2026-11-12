@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useConfirmation } from "../../components/useConfirmation";
 import api from "../../services/api";
 
 function AdminArtists() {
+  const confirm = useConfirmation();
   const [artists, setArtists] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,29 @@ function AdminArtists() {
   };
 
   useEffect(() => {
-    getArtists();
+    let active = true;
+
+    api
+      .get("/artists")
+      .then((response) => {
+        if (!active) return;
+        setError("");
+        setArtists(response.data.data || []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error("GET ARTISTS ERROR:", err);
+        setError(
+          err.response?.data?.message || "Gagal mengambil data artist."
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // =========================
@@ -137,9 +161,11 @@ function AdminArtists() {
   // =========================
 
   const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Apakah kamu yakin ingin menghapus artist ini?"
-    );
+    const confirmed = await confirm({
+      title: "Hapus artis?",
+      message: "Data artis ini akan dihapus dan tidak dapat dipulihkan.",
+      confirmLabel: "Hapus artis",
+    });
 
     if (!confirmed) return;
 

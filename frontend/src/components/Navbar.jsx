@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useConfirmation } from "./useConfirmation";
 import {
   Compass,
   House,
@@ -12,6 +13,7 @@ import {
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const confirm = useConfirmation();
 
   const [accountOpen, setAccountOpen] = useState(false);
   const activeSection = location.hash.replace("#", "");
@@ -45,7 +47,14 @@ function Navbar() {
   // LOGOUT
   // =====================================================
 
-  const logout = () => {
+  const logout = async () => {
+    const confirmed = await confirm({
+      title: "Keluar dari akun?",
+      message: "Kamu perlu masuk kembali untuk mengakses akun.",
+      confirmLabel: "Logout",
+    });
+    if (!confirmed) return;
+
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
 

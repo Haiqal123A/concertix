@@ -165,6 +165,15 @@ router.get(
           payment_status,
           created_at,
 
+          concert_order_numbers (
+            concert_id,
+            order_number,
+            concerts (
+              id,
+              title
+            )
+          ),
+
           order_items (
             id,
             quantity,
@@ -181,6 +190,8 @@ router.get(
                 title,
                 poster,
                 description,
+                artist_names,
+                venue_address,
                 concert_date,
                 concert_time,
                 status,
@@ -253,6 +264,15 @@ router.get(
           payment_status,
           created_at,
 
+          concert_order_numbers (
+            concert_id,
+            order_number,
+            concerts (
+              id,
+              title
+            )
+          ),
+
           users (
             id,
             name,
@@ -275,6 +295,8 @@ router.get(
                 title,
                 poster,
                 description,
+                artist_names,
+                venue_address,
                 concert_date,
                 concert_time,
                 status,
@@ -442,6 +464,15 @@ router.get(
           payment_status,
           created_at,
 
+          concert_order_numbers (
+            concert_id,
+            order_number,
+            concerts (
+              id,
+              title
+            )
+          ),
+
           order_items (
             id,
             quantity,
@@ -458,6 +489,8 @@ router.get(
                 title,
                 poster,
                 description,
+                artist_names,
+                venue_address,
                 concert_date,
                 concert_time,
                 status,
@@ -504,9 +537,13 @@ router.get(
             order_items (
               ticket_types (
                 name,
+
                 concerts (
+                  id,
                   title,
                   poster,
+                  artist_names,
+                  venue_address,
                   concert_date,
                   concert_time,
                   venues (

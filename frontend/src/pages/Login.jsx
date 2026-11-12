@@ -54,6 +54,8 @@ function Login() {
       if (userRole === "admin") {
         // Admin langsung ke dashboard
         navigate("/admin", { replace: true });
+      } else if (userRole === "petugas") {
+        navigate("/petugas/scan", { replace: true });
       } else {
         navigate("/", { replace: true });
       }

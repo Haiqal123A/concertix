@@ -45,10 +45,14 @@ function ConcertCard({ concert, isFinished }) {
     concert.category?.name ||
     concert.category_name;
   const artist =
+    concert.artist_names ||
     concert.artists?.name ||
     concert.artist?.name ||
     concert.artist_name;
-  const venue = concert.venues || concert.venue;
+  const venue = concert.venues || concert.venue || {};
+  const venueAddress = concert.venue_address || venue.address;
+  const venueLabel =
+    venueAddress || [venue.name, venue.city].filter(Boolean).join(", ");
   const status = isFinished ? "finished" : concert.status;
 
   return (
@@ -85,7 +89,12 @@ function ConcertCard({ concert, isFinished }) {
         <h3 className="mt-1.5 line-clamp-2 text-sm font-bold leading-snug text-slate-950 sm:mt-2 sm:text-lg">
           {concert.title}
         </h3>
-        {artist && <p className="mt-1 truncate text-xs text-slate-500 sm:text-sm">{artist}</p>}
+        {artist && (
+          <p className="mt-1 truncate text-xs text-slate-500 sm:text-sm">
+            {artist}
+            {concert.artist_count > 0 && ` · ${concert.artist_count} artis`}
+          </p>
+        )}
 
         <div className="mt-3 space-y-1.5 text-xs text-slate-500 sm:mt-4 sm:space-y-2 sm:text-sm">
           {concert.concert_time && (
@@ -94,13 +103,10 @@ function ConcertCard({ concert, isFinished }) {
               {concert.concert_time}
             </p>
           )}
-          {venue && (
+          {venueLabel && (
             <p className="flex items-center gap-2">
               <MapPin size={15} className="h-3 w-3 shrink-0 text-slate-400 sm:h-[15px] sm:w-[15px]" />
-              <span className="truncate">
-                {venue.name}
-                {venue.city ? `, ${venue.city}` : ""}
-              </span>
+              <span className="truncate">{venueLabel}</span>
             </p>
           )}
         </div>
@@ -191,11 +197,14 @@ function AllConcerts() {
         concert.artists?.name,
         concert.artist?.name,
         concert.artist_name,
+        concert.artist_names,
         concert.categories?.name,
         concert.category?.name,
         concert.category_name,
+        concert.venue_address,
         venue?.name,
         venue?.city,
+        venue?.address,
       ]
         .filter(Boolean)
         .join(" ")

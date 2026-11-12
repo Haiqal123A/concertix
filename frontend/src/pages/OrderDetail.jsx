@@ -1,18 +1,36 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle2,
   Clock3,
+  Download,
   ExternalLink,
   Ticket,
 } from "lucide-react";
 import QRCode from "qrcode";
+import { toBlob } from "html-to-image";
 import api from "../services/api";
 import "./TicketPrint.css";
 
 const formatCurrency = (value) =>
   Number(value || 0).toLocaleString("id-ID");
+
+const getConcertOrderNumber = (order, concertId) =>
+  order.concert_order_numbers?.find(
+    (item) => Number(item.concert_id) === Number(concertId)
+  );
+
+const downloadImageBlob = (blob, fileName) => {
+  const imageUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = imageUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(imageUrl), 1000);
+};
 
 function TicketQr({ value }) {
   const [image, setImage] = useState("");
@@ -52,6 +70,9 @@ export default function OrderDetail() {
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [configError, setConfigError] = useState("");
   const [paying, setPaying] = useState(false);
+  const [downloadingTicketId, setDownloadingTicketId] = useState(null);
+  const [downloadError, setDownloadError] = useState("");
+  const ticketElements = useRef(new Map());
 
   const loadOrder = useCallback(async () => {
     const response = await api.get(`/orders/${id}`);
@@ -158,6 +179,60 @@ export default function OrderDetail() {
     }
   };
 
+  const handleDownloadTicket = async (issuedTicket, concertTitle) => {
+    const ticketElement = ticketElements.current.get(issuedTicket.id);
+    if (!ticketElement) {
+      setDownloadError("Tiket belum siap untuk diunduh. Coba lagi.");
+      return;
+    }
+
+    setDownloadingTicketId(issuedTicket.id);
+    setDownloadError("");
+
+    try {
+      const imageBlob = await toBlob(ticketElement, {
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+        filter: (node) =>
+          !(
+            node.nodeType === Node.ELEMENT_NODE &&
+            node.hasAttribute("data-ticket-poster")
+          ),
+      });
+
+      if (!imageBlob) {
+        throw new Error("Gambar tiket tidak berhasil dibuat.");
+      }
+
+      const fileName = `concertix-tiket-${issuedTicket.attendee_number}.png`;
+      if (typeof File !== "undefined" && navigator.share) {
+        const file = new File([imageBlob], fileName, { type: "image/png" });
+        if (navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `Tiket ${concertTitle || "konser"}`,
+              text: "Simpan gambar tiket ini ke galeri atau bagikan.",
+            });
+            return;
+          } catch (shareError) {
+            if (shareError.name === "AbortError") return;
+            console.error("SHARE TICKET IMAGE ERROR:", shareError);
+          }
+        }
+      }
+
+      downloadImageBlob(imageBlob, fileName);
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error("DOWNLOAD TICKET IMAGE ERROR:", err);
+        setDownloadError("Gambar tiket gagal dibuat. Coba lagi.");
+      }
+    } finally {
+      setDownloadingTicketId(null);
+    }
+  };
+
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-50 px-6 pb-20 pt-32">
@@ -202,6 +277,7 @@ export default function OrderDetail() {
         0
       )
   );
+  const concertOrders = order.concert_order_numbers || [];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-violet-50/70 via-slate-50 to-fuchsia-50/60 px-4 pb-20 pt-28 text-slate-900 sm:px-6 sm:pt-32">
@@ -223,11 +299,26 @@ export default function OrderDetail() {
             <div className="pointer-events-none absolute -bottom-36 left-1/3 -z-10 h-64 w-64 rounded-full bg-fuchsia-500/15 blur-3xl" />
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-                  Order #{order.id}
-                </h1>
-                <p className="mt-2 text-sm text-slate-300">
-                  Dibuat {new Date(order.created_at).toLocaleString("id-ID")}
+                {concertOrders.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {concertOrders.map((concertOrder) => (
+                      <span
+                        key={concertOrder.concert_id}
+                        className="rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold"
+                      >
+                        {concertOrder.concerts?.title || "Konser"} · No.{" "}
+                        {String(concertOrder.order_number).padStart(2, "0")}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+                    Order #{order.id}
+                  </h1>
+                )}
+                <p className="mt-2 text-xs text-slate-400">
+                  ID transaksi #{order.id} · Dibuat{" "}
+                  {new Date(order.created_at).toLocaleString("id-ID")}
                 </p>
               </div>
               <span
@@ -273,103 +364,150 @@ export default function OrderDetail() {
             </div>
 
             {isPaid ? (
-              <div className="mt-6 space-y-5">
+              <div className="mt-5 space-y-4">
                 {tickets.length > 0 ? (
                   <>
-                    <div className="ticket-print-controls flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => window.print()}
-                        className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700"
-                      >
-                        Unduh tiket (PDF)
-                      </button>
-                    </div>
-                    <div className="ticket-print-area space-y-5">
+                    <div className="ticket-print-area space-y-4">
                       {tickets.map((issuedTicket) => {
                         const item = issuedTicket.order_items;
                         const ticketType = item?.ticket_types;
                         const concert = ticketType?.concerts;
                         const venue = concert?.venues;
+                        const concertOrderNumber = getConcertOrderNumber(
+                          order,
+                          concert?.id
+                        );
+                        const venueAddress =
+                          concert?.venue_address ||
+                          venue?.address ||
+                          venue?.name;
 
                         return (
-                          <article
-                            key={issuedTicket.id}
-                            className="issued-ticket overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-                          >
-                            <div className="flex min-h-32">
-                              {concert?.poster && (
-                                <img
-                                  src={concert.poster}
-                                  alt={concert.title || "Konser"}
-                                  className="hidden w-28 object-cover sm:block"
-                                />
-                              )}
-                              <div className="min-w-0 flex-1 p-5">
-                                <p className="text-xs font-bold uppercase tracking-wider text-violet-700">
-                                  Concertix · Tiket masuk
-                                </p>
-                                <h3 className="mt-2 text-lg font-bold text-slate-950">
-                                  {concert?.title || "Tiket konser"}
-                                </h3>
-                                <p className="mt-1 text-sm text-violet-700">
-                                  {ticketType?.name || "Tiket"} · Pengunjung{" "}
-                                  {issuedTicket.attendee_number}
-                                </p>
-                                {order.customer_name && (
-                                  <p className="mt-2 text-sm text-slate-700">
-                                    Nama: {order.customer_name}
-                                  </p>
-                                )}
-                                {order.customer_email && (
-                                  <p className="mt-1 text-sm text-slate-600">
-                                    Email: {order.customer_email}
-                                  </p>
-                                )}
-                                <p className="mt-3 text-sm text-slate-600">
-                                  {concert?.concert_date
-                                    ? new Date(
-                                        `${concert.concert_date}T00:00:00`
-                                      ).toLocaleDateString("id-ID", {
-                                        weekday: "long",
-                                        day: "numeric",
-                                        month: "long",
-                                        year: "numeric",
-                                      })
-                                    : "Tanggal menyusul"}
-                                  {concert?.concert_time
-                                    ? ` · ${concert.concert_time.slice(0, 5)}`
-                                    : ""}
-                                </p>
-                                {venue?.name && (
-                                  <p className="mt-1 text-sm text-slate-600">
-                                    {venue.name}
-                                    {venue.city ? `, ${venue.city}` : ""}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-center gap-3 border-t border-dashed border-slate-300 bg-slate-50 p-5">
-                              <TicketQr value={issuedTicket.ticket_code} />
-                              <p className="break-all text-center font-mono text-xs text-slate-500">
-                                {issuedTicket.ticket_code}
-                              </p>
-                              <p
-                                className={`text-xs font-bold ${
-                                  issuedTicket.checked_in_at
-                                    ? "text-emerald-700"
-                                    : "text-slate-500"
-                                }`}
+                          <div key={issuedTicket.id} className="space-y-2">
+                            <div className="ticket-print-controls flex justify-center">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDownloadTicket(
+                                    issuedTicket,
+                                    concert?.title
+                                  )
+                                }
+                                disabled={downloadingTicketId !== null}
+                                className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700 disabled:cursor-wait disabled:opacity-60"
                               >
-                                {issuedTicket.checked_in_at
-                                  ? "Sudah digunakan"
-                                  : `Order #${order.id} · Tunjukkan QR ini di pintu masuk`}
-                              </p>
+                                <Download size={16} />
+                                {downloadingTicketId === issuedTicket.id
+                                  ? "Menyiapkan gambar..."
+                                  : "Unduh gambar"}
+                              </button>
                             </div>
-                          </article>
+                            <article
+                              ref={(element) => {
+                                if (element) {
+                                  ticketElements.current.set(
+                                    issuedTicket.id,
+                                    element
+                                  );
+                                } else {
+                                  ticketElements.current.delete(
+                                    issuedTicket.id
+                                  );
+                                }
+                              }}
+                              className="issued-ticket mx-auto w-[94%] max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                            >
+                              <div className="flex min-h-32">
+                                {concert?.poster && (
+                                  <img
+                                    src={concert.poster}
+                                    alt={concert.title || "Konser"}
+                                    className="hidden w-28 object-cover sm:block"
+                                    data-ticket-poster=""
+                                  />
+                                )}
+                                <div className="min-w-0 flex-1 p-3.5 sm:p-4">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider text-violet-700 sm:text-xs">
+                                    Concertix · Tiket masuk
+                                  </p>
+                                  <h3 className="mt-1.5 text-base font-bold leading-snug text-slate-950 sm:text-lg">
+                                    {concert?.title || "Tiket konser"}
+                                  </h3>
+                                  {concert?.artist_names && (
+                                    <p className="mt-1 text-xs text-slate-600 sm:text-sm">
+                                      {concert.artist_names}
+                                    </p>
+                                  )}
+                                  <p className="mt-1 text-xs text-violet-700 sm:text-sm">
+                                    {ticketType?.name || "Tiket"} · Pengunjung{" "}
+                                    {issuedTicket.attendee_number}
+                                  </p>
+                                  {order.customer_name && (
+                                    <p className="mt-1.5 text-xs text-slate-700 sm:mt-2 sm:text-sm">
+                                      Nama: {order.customer_name}
+                                    </p>
+                                  )}
+                                  {order.customer_email && (
+                                    <p className="mt-0.5 break-all text-xs text-slate-600 sm:mt-1 sm:text-sm">
+                                      Email: {order.customer_email}
+                                    </p>
+                                  )}
+                                  <p className="mt-2 text-xs leading-5 text-slate-600 sm:mt-3 sm:text-sm">
+                                    {concert?.concert_date
+                                      ? new Date(
+                                          `${concert.concert_date}T00:00:00`
+                                        ).toLocaleDateString("id-ID", {
+                                          weekday: "long",
+                                          day: "numeric",
+                                          month: "long",
+                                          year: "numeric",
+                                        })
+                                      : "Tanggal menyusul"}
+                                    {concert?.concert_time
+                                      ? ` · ${concert.concert_time.slice(0, 5)}`
+                                      : ""}
+                                  </p>
+                                  {venueAddress && (
+                                    <p className="mt-0.5 text-xs leading-5 text-slate-600 sm:mt-1 sm:text-sm">
+                                      {venueAddress}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center gap-2 border-t border-dashed border-slate-300 bg-slate-50 p-3.5 sm:p-4">
+                                <TicketQr value={issuedTicket.ticket_code} />
+                                <p className="break-all text-center font-mono text-[10px] text-slate-500 sm:text-xs">
+                                  {issuedTicket.ticket_code}
+                                </p>
+                                <p
+                                  className={`text-center text-[10px] font-bold sm:text-xs ${
+                                    issuedTicket.checked_in_at
+                                      ? "text-emerald-700"
+                                      : "text-slate-500"
+                                  }`}
+                                >
+                                  {issuedTicket.checked_in_at
+                                    ? "Sudah digunakan"
+                                    : concertOrderNumber
+                                      ? `No. pemesanan ${String(
+                                          concertOrderNumber.order_number
+                                        ).padStart(2, "0")} · Tunjukkan QR ini di pintu masuk`
+                                      : `Order #${order.id} · Tunjukkan QR ini di pintu masuk`}
+                                </p>
+                              </div>
+                            </article>
+                          </div>
                         );
                       })}
                     </div>
+                    {downloadError && (
+                      <p
+                        role="alert"
+                        className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                      >
+                        {downloadError}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <div

@@ -101,12 +101,22 @@ function Orders() {
         (activeFilter === "paid" && isPaid) ||
         (activeFilter === "pending" && isPending);
 
-      const concertTitle =
-        order.order_items?.[0]?.ticket_types?.concerts?.title || "";
+      const concertTitles = [
+        ...(order.concert_order_numbers || []).map(
+          (item) => item.concerts?.title || ""
+        ),
+        order.order_items?.[0]?.ticket_types?.concerts?.title || "",
+      ];
+      const concertNumbers = (order.concert_order_numbers || []).map((item) =>
+        String(item.order_number || "").padStart(2, "0")
+      );
       const matchesSearch =
         !keyword ||
         String(order.id).includes(keyword) ||
-        concertTitle.toLocaleLowerCase("id-ID").includes(keyword);
+        concertTitles.some((title) =>
+          title.toLocaleLowerCase("id-ID").includes(keyword)
+        ) ||
+        concertNumbers.some((number) => number.includes(keyword));
 
       return matchesFilter && matchesSearch;
     });
@@ -286,7 +296,7 @@ function Orders() {
                   Tidak ada pesanan yang cocok. Coba ubah pencarian atau filter.
                 </div>
               ) : (
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
                   {visibleOrders.map((order) => {
                     const isPaid = order.payment_status === "paid";
                     const isPending =
@@ -295,6 +305,9 @@ function Orders() {
                     const firstItem = order.order_items?.[0];
                     const concert =
                       firstItem?.ticket_types?.concerts;
+                    const concertOrders = order.concert_order_numbers || [];
+                    const primaryConcertTitle =
+                      concertOrders[0]?.concerts?.title || concert?.title;
                     const ticketCount = Number(
                       order.ticket_count ??
                         order.order_items?.reduce(
@@ -310,26 +323,26 @@ function Orders() {
                         key={order.id}
                         className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/60"
                       >
-                        <div className="flex gap-4 p-5">
+                        <div className="flex gap-3 p-3 sm:gap-4 sm:p-5">
                           {concert?.poster ? (
                             <img
                               src={concert.poster}
                               alt={concert.title || "Poster konser"}
-                              className="h-28 w-20 shrink-0 rounded-xl object-cover"
+                              className="h-20 w-14 shrink-0 rounded-lg object-cover sm:h-28 sm:w-20 sm:rounded-xl"
                             />
                           ) : (
-                            <div className="flex h-28 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-700">
-                              <Ticket size={25} />
+                            <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-700 sm:h-28 sm:w-20 sm:rounded-xl">
+                              <Ticket size={21} />
                             </div>
                           )}
 
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                                Order #{order.id}
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 sm:text-xs">
+                                ID transaksi #{order.id}
                               </p>
                               <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold sm:gap-1.5 sm:px-2.5 sm:text-xs ${
                                   isPaid
                                     ? "bg-emerald-50 text-emerald-700"
                                     : isPending
@@ -338,21 +351,40 @@ function Orders() {
                                 }`}
                               >
                                 {isPaid ? (
-                                  <CheckCircle2 size={13} />
+                                  <CheckCircle2 size={12} />
                                 ) : (
-                                  <Clock3 size={13} />
+                                  <Clock3 size={12} />
                                 )}
                                 {getPaymentLabel(order.payment_status)}
                               </span>
                             </div>
 
-                            <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-snug text-slate-950">
-                              {concert?.title || "Pesanan tiket konser"}
+                            <h3 className="mt-1.5 line-clamp-2 text-base font-bold leading-snug text-slate-950 sm:mt-2 sm:text-lg">
+                              {concertOrders.length > 1
+                                ? `${concertOrders.length} konser`
+                                : primaryConcertTitle || "Pesanan tiket konser"}
                             </h3>
 
-                            <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-                              <CalendarDays size={14} />
-                              {concert?.concert_date
+                            {concertOrders.length > 0 && (
+                              <div className="mt-1.5 space-y-0.5 sm:mt-2 sm:space-y-1">
+                                {concertOrders.map((concertOrder) => (
+                                  <p
+                                    key={concertOrder.concert_id}
+                                    className="truncate text-[11px] font-semibold text-violet-700 sm:text-xs"
+                                  >
+                                    {concertOrder.concerts?.title || "Konser"} ·
+                                    No.{" "}
+                                    {String(
+                                      concertOrder.order_number
+                                    ).padStart(2, "0")}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+
+                            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-500 sm:mt-2 sm:gap-1.5 sm:text-xs">
+                              <CalendarDays size={13} />
+                              {concertOrders.length === 1 && concert?.concert_date
                                 ? formatDate(
                                     `${concert.concert_date}T00:00:00`
                                   )
@@ -361,20 +393,20 @@ function Orders() {
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/70 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-4">
                           <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 sm:text-[11px]">
                               {isPaid
                                 ? `${ticketCount} tiket`
                                 : `Dipesan ${formatDate(order.created_at)}`}
                             </p>
-                            <p className="mt-1 font-bold text-slate-950">
+                            <p className="mt-0.5 text-sm font-bold text-slate-950 sm:mt-1 sm:text-base">
                               Rp {formatCurrency(order.total_price)}
                             </p>
                           </div>
                           <Link
                             to={`/orders/${order.id}`}
-                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2.5 sm:text-sm ${
                               isPaid
                                 ? "border border-slate-200 bg-white text-slate-700 hover:border-violet-200 hover:text-violet-700"
                                 : "bg-violet-700 text-white hover:bg-violet-800"

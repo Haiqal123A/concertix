@@ -605,6 +605,19 @@ function ConcertDetail() {
                 <ArrowRight size={16} />
               </a>
 
+              {(concert.artist_names || concert.artists?.name) && (
+                <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Artis
+                    {concert.artist_count != null &&
+                      ` · ${concert.artist_count} artis`}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-200">
+                    {concert.artist_names || concert.artists?.name}
+                  </p>
+                </div>
+              )}
+
               {/* META */}
 
               <div className="mt-9 grid gap-3 sm:grid-cols-2">
@@ -661,7 +674,9 @@ function ConcertDetail() {
 
                 {/* VENUE */}
 
-                {concert.venues && (
+                {(concert.venue_address ||
+                  concert.venues?.address ||
+                  concert.venues?.name) && (
                   <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-3 shadow-[0_10px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-indigo-300/40 sm:col-span-2 sm:p-5">
 
                     <div className="flex gap-3 sm:gap-4">
@@ -671,15 +686,14 @@ function ConcertDetail() {
                       </div>
 
                       <div>
-                        <p className="mt-2 font-bold text-white">
-                          {concert.venues.name}
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Alamat Venue
                         </p>
-
-                        {concert.venues.city && (
-                          <p className="mt-1 text-sm text-slate-400">
-                            {concert.venues.city}
-                          </p>
-                        )}
+                        <p className="mt-2 font-bold text-white">
+                          {concert.venue_address ||
+                            concert.venues?.address ||
+                            concert.venues?.name}
+                        </p>
 
                       </div>
 
@@ -689,22 +703,6 @@ function ConcertDetail() {
                 )}
 
               </div>
-
-              {/* ADDRESS */}
-
-              {concert.venues?.address && (
-                <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:mt-5 sm:p-5">
-
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Alamat
-                  </p>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
-                    {concert.venues.address}
-                  </p>
-
-                </div>
-              )}
 
           </div>
 

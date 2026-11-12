@@ -4,10 +4,41 @@ const router = express.Router();
 const supabase = require("../config/supabase");
 const { verifyToken, checkRole } = require("../middleware/authMiddleware");
 
+const requireActiveStaff = async (req, res, next) => {
+  if (req.user.role !== "petugas") return next();
+
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", req.user.id)
+      .eq("role", "petugas")
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      return res.status(401).json({
+        success: false,
+        message: "Akun petugas sudah tidak aktif",
+      });
+    }
+
+    return next();
+  } catch (err) {
+    console.error("VERIFY TICKET STAFF ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Gagal memverifikasi akun petugas",
+    });
+  }
+};
+
 router.post(
   "/scan",
   verifyToken,
-  checkRole("admin", "super_admin"),
+  checkRole("admin", "super_admin", "petugas"),
+  requireActiveStaff,
   async (req, res) => {
     try {
       const ticketCode =
@@ -63,9 +94,11 @@ router.post(
             ticket_types (
               name,
               concerts (
+                id,
                 title,
                 concert_date,
                 concert_time,
+                venue_address,
                 venues (
                   name,
                   city
@@ -75,7 +108,11 @@ router.post(
           ),
           orders (
             customer_name,
-            customer_email
+            customer_email,
+            concert_order_numbers (
+              concert_id,
+              order_number
+            )
           )
         `)
         .eq("id", result.ticket_id)

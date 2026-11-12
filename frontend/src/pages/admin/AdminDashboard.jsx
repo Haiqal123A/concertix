@@ -2,24 +2,49 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  ArrowUpRight,
   BadgeCheck,
-  CircleDollarSign,
   Clock3,
-  CreditCard,
   Music2,
-  Plus,
   RefreshCw,
   Ticket,
   XCircle,
 } from "lucide-react";
 import api from "../../services/api";
 
+const concertStatusLabels = {
+  upcoming: "Akan datang",
+  ongoing: "Berlangsung",
+  sold_out: "Tiket habis",
+  finished: "Selesai",
+  cancelled: "Dibatalkan",
+};
+
+const concertStatusStyles = {
+  upcoming: "bg-violet-50 text-violet-700",
+  ongoing: "bg-emerald-50 text-emerald-700",
+  sold_out: "bg-amber-50 text-amber-700",
+  finished: "bg-slate-100 text-slate-600",
+  cancelled: "bg-rose-50 text-rose-700",
+};
+
+const formatConcertDate = (date) => {
+  if (!date) return "Tanggal belum ditentukan";
+
+  const parsedDate = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) return "Tanggal belum ditentukan";
+
+  return parsedDate.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  });
+};
+
 function AdminDashboard() {
   const [concerts, setConcerts] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [payments, setPayments] = useState([]);
-  const [paymentConfig, setPaymentConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -30,23 +55,16 @@ function AdminDashboard() {
         setLoading(true);
         setError("");
 
-        const [
-          concertResponse,
-          ticketResponse,
-          paymentResponse,
-          paymentConfigResponse,
-        ] =
+        const [concertResponse, ticketResponse, paymentResponse] =
           await Promise.all([
             api.get("/concerts"),
             api.get("/ticket-types"),
             api.get("/payments/admin"),
-            api.get("/payments/config"),
           ]);
 
         setConcerts(concertResponse.data.data || []);
         setTickets(ticketResponse.data.data || []);
         setPayments(paymentResponse.data.data || []);
-        setPaymentConfig(paymentConfigResponse.data.data);
       } catch (err) {
         console.error("ADMIN DASHBOARD ERROR:", err);
         setError(
@@ -78,15 +96,14 @@ function AdminDashboard() {
   const rejectedPayments = payments.filter(
     (payment) => payment.status === "rejected"
   ).length;
-  const totalRevenue = payments
-    .filter((payment) => payment.status === "paid")
-    .reduce(
-      (total, payment) => total + Number(payment.orders?.total_price || 0),
-      0
-    );
-
-  const formatRupiah = (number) =>
-    `Rp ${Number(number).toLocaleString("id-ID")}`;
+  const dashboardConcerts = concerts
+    .filter(
+      (concert) =>
+        !["sold_out", "finished", "cancelled"].includes(
+          concert.status || "upcoming"
+        )
+    )
+    .slice(0, 3);
 
   const metrics = [
     {
@@ -95,7 +112,6 @@ function AdminDashboard() {
       note: "Konser terdaftar",
       icon: Music2,
       iconStyle: "bg-violet-50 text-violet-700",
-      valueStyle: "text-slate-950",
     },
     {
       label: "Stok tiket",
@@ -103,24 +119,13 @@ function AdminDashboard() {
       note: "Seluruh kategori tiket",
       icon: Ticket,
       iconStyle: "bg-sky-50 text-sky-700",
-      valueStyle: "text-slate-950",
     },
     {
-      label: "Tiket dipesan",
+      label: "Tiket terjual",
       value: error ? "—" : totalSold.toLocaleString("id-ID"),
-      note: "Tiket terjual dari transaksi berhasil",
-      icon: ArrowUpRight,
+      note: "Dari seluruh kategori tiket",
+      icon: BadgeCheck,
       iconStyle: "bg-emerald-50 text-emerald-700",
-      valueStyle: "text-slate-950",
-    },
-    {
-      label: "Pendapatan dibayar",
-      value: error ? "—" : formatRupiah(totalRevenue),
-      note: "Dari pembayaran berhasil",
-      icon: CircleDollarSign,
-      iconStyle: "bg-white/10 text-violet-200",
-      valueStyle: "text-white",
-      featured: true,
     },
   ];
 
@@ -134,7 +139,7 @@ function AdminDashboard() {
       iconStyle: "bg-white text-amber-600",
     },
     {
-      label: "      Pembayaran berhasil",
+      label: "Pembayaran berhasil",
       value: paidPayments,
       note: "Tiket tersedia untuk pembeli",
       icon: BadgeCheck,
@@ -165,32 +170,18 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="relative min-h-full overflow-hidden">
-      <div className="pointer-events-none absolute -right-36 -top-32 h-96 w-96 rounded-full bg-violet-100/70 blur-3xl" />
-
-      <main className="relative mx-auto max-w-[1440px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8 lg:px-8">
-        <div className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-h-full bg-slate-50">
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+        <header className="mb-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
           <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-600">
-              Ruang kerja Concertix
-            </p>
             <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-[2.5rem]">
               Dashboard
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
-              Pantau aktivitas konser, penjualan tiket, dan pembayaran dalam
-              satu tempat.
+              Ringkasan konser, tiket, dan status pembayaran.
             </p>
           </div>
-
-          <Link
-            to="/admin/concerts"
-            className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-200/70 transition hover:-translate-y-0.5 hover:bg-violet-700 sm:self-auto"
-          >
-            <Plus size={17} />
-            Kelola konser
-          </Link>
-        </div>
+        </header>
 
         {error && (
           <div
@@ -211,43 +202,20 @@ function AdminDashboard() {
 
         <section
           aria-label="Ringkasan performa"
-          className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4"
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
         >
           {metrics.map(
-            ({
-              label,
-              value,
-              note,
-              icon: Icon,
-              iconStyle,
-              valueStyle,
-              featured,
-            }) => (
+            ({ label, value, note, icon: Icon, iconStyle }) => (
               <article
                 key={label}
-                className={`relative overflow-hidden rounded-2xl border p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                  featured
-                    ? "border-violet-900 bg-gradient-to-br from-slate-950 via-slate-900 to-violet-950 shadow-violet-950/10"
-                    : "border-slate-200/80 bg-white shadow-slate-200/40"
-                }`}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               >
-                {featured && (
-                  <div className="pointer-events-none absolute -right-8 -top-12 h-36 w-36 rounded-full border-[24px] border-white/[0.04]" />
-                )}
-                <div className="relative flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p
-                      className={`text-sm font-medium ${
-                        featured ? "text-slate-300" : "text-slate-500"
-                      }`}
-                    >
+                    <p className="text-sm font-medium text-slate-500">
                       {label}
                     </p>
-                    <p
-                      className={`mt-4 break-words text-2xl font-bold tracking-tight sm:text-[1.8rem] ${
-                        featured ? "text-white" : valueStyle
-                      }`}
-                    >
+                    <p className="mt-4 break-words text-2xl font-bold tracking-tight text-slate-950 sm:text-[1.8rem]">
                       {value}
                     </p>
                   </div>
@@ -257,11 +225,7 @@ function AdminDashboard() {
                     <Icon size={19} strokeWidth={1.9} />
                   </span>
                 </div>
-                <p
-                  className={`relative mt-3 text-xs ${
-                    featured ? "text-slate-400" : "text-slate-400"
-                  }`}
-                >
+                <p className="mt-3 text-xs text-slate-400">
                   {note}
                 </p>
               </article>
@@ -316,143 +280,92 @@ function AdminDashboard() {
           </div>
         </section>
 
-        <section className="mt-5 grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-          <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40 sm:p-6">
-            <div className="flex items-start gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700">
-                <CreditCard size={21} strokeWidth={1.8} />
-              </span>
-              <div>
-                <h2 className="font-bold text-slate-900">
-                  Pembayaran Midtrans
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  Alur otomatis: pembayaran terkonfirmasi, tiket langsung tersedia.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 rounded-xl border border-amber-100 bg-amber-50/70 p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-slate-800">
-                  Status integrasi
-                </p>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                    paymentConfig?.isConfigured
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-amber-100 text-amber-800"
-                  }`}
-                >
-                  {paymentConfig?.isConfigured
-                    ? `Aktif · ${paymentConfig.environment}`
-                    : "Belum dikonfigurasi"}
-                </span>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Pembayaran diproses lewat Midtrans. Notifikasi gateway akan
-                memperbarui status order dan menerbitkan tiket setelah transaksi
-                berhasil.
-              </p>
-            </div>
-
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="max-w-md text-xs leading-5 text-slate-500">
-                {paymentConfig?.isConfigured
-                  ? `Midtrans aktif pada mode ${paymentConfig.environment}.`
-                  : "Checkout dinonaktifkan sampai kredensial Midtrans dikonfigurasi di backend."}
-              </p>
-              <Link
-                to="/admin/payments"
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-800"
+        <section className="mt-7" aria-labelledby="concert-list-title">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2
+                id="concert-list-title"
+                className="text-lg font-bold tracking-tight text-slate-900"
               >
-                Lihat transaksi <ArrowUpRight size={15} />
-              </Link>
-            </div>
-          </article>
-
-          <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40 sm:p-6">
-            <div className="mb-4">
-              <h2 className="font-bold text-slate-900">Akses cepat</h2>
+                Konser mendatang
+              </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Lanjutkan pekerjaan admin.
+                Maksimal tiga konser yang belum selesai dan belum sold out.
               </p>
             </div>
-            <div className="space-y-2">
-              <Link
-                to="/admin/concerts"
-                className="group flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-4 py-3 transition hover:border-violet-100 hover:bg-violet-50/60"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
-                    <Music2 size={17} />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-slate-800">
-                      Kelola konser
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">
-                      {error
-                        ? "Data belum tersedia"
-                        : `${totalConcerts.toLocaleString("id-ID")} konser terdaftar`}
-                    </span>
-                  </span>
-                </span>
-                <ArrowRight
-                  size={16}
-                  className="text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-violet-700"
-                />
-              </Link>
+            <span className="text-sm font-medium text-slate-500">
+              {dashboardConcerts.length} ditampilkan
+            </span>
+          </div>
 
-              <Link
-                to="/admin/payments"
-                className="group flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-4 py-3 transition hover:border-violet-100 hover:bg-violet-50/60"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
-                    <CreditCard size={17} />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-slate-800">
-                      Transaksi menunggu
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">
-                      {error
-                        ? "Data belum tersedia"
-                        : `${pendingPayments.toLocaleString("id-ID")} menunggu verifikasi`}
-                    </span>
-                  </span>
-                </span>
-                <ArrowRight
-                  size={16}
-                  className="text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-violet-700"
-                />
-              </Link>
+          <div>
+            {dashboardConcerts.length === 0 ? (
+              <p className="rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center text-sm text-slate-500 shadow-sm">
+                Belum ada konser mendatang dengan tiket tersedia.
+              </p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {dashboardConcerts.map((concert) => {
+                  const status = concert.status || "upcoming";
+                  const venueAddress =
+                    concert.venue_address ||
+                    concert.venues?.address ||
+                    concert.venues?.name;
 
-              <Link
-                to="/"
-                className="group flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-4 py-3 transition hover:border-violet-100 hover:bg-violet-50/60"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
-                    <ArrowUpRight size={17} />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-slate-800">
-                      Buka website
-                    </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">
-                      Lihat tampilan untuk pelanggan
-                    </span>
-                  </span>
-                </span>
-                <ArrowRight
-                  size={16}
-                  className="text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-violet-700"
-                />
-              </Link>
-            </div>
-          </article>
+                  return (
+                    <article
+                      key={concert.id}
+                      className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="relative aspect-[16/9] bg-slate-100">
+                        {concert.poster ? (
+                          <img
+                            src={concert.poster}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-slate-400">
+                            <Music2 size={32} strokeWidth={1.6} />
+                          </div>
+                        )}
+                        <span
+                          className={`absolute right-3 top-3 inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ${
+                            concertStatusStyles[status] ||
+                            concertStatusStyles.upcoming
+                          }`}
+                        >
+                          {concertStatusLabels[status] || "Akan datang"}
+                        </span>
+                      </div>
+
+                      <div className="p-4">
+                        <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-slate-900">
+                          {concert.title}
+                        </h3>
+                        <p className="mt-1 truncate text-sm text-slate-500">
+                          {concert.artist_names ||
+                            concert.artists?.name ||
+                            "Artis belum diisi"}
+                        </p>
+                        <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
+                          <p className="flex items-center gap-2 text-xs text-slate-500">
+                            <Clock3 size={14} className="shrink-0 text-slate-400" />
+                            {formatConcertDate(concert.concert_date)}
+                          </p>
+                          {venueAddress && (
+                            <p className="truncate text-xs text-slate-500">
+                              {venueAddress}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </section>
       </main>
     </div>

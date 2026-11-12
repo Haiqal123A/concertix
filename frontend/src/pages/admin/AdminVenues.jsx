@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useConfirmation } from "../../components/useConfirmation";
 import api from "../../services/api";
 
 function AdminVenues() {
+  const confirm = useConfirmation();
   const [venues, setVenues] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -43,7 +45,29 @@ function AdminVenues() {
   };
 
   useEffect(() => {
-    getVenues();
+    let active = true;
+
+    api
+      .get("/venues")
+      .then((response) => {
+        if (!active) return;
+        setError("");
+        setVenues(response.data.data || []);
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error("GET VENUES ERROR:", err);
+        setError(
+          err.response?.data?.message || "Gagal mengambil data venue."
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // =========================
@@ -141,9 +165,11 @@ function AdminVenues() {
   // =========================
 
   const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Apakah kamu yakin ingin menghapus venue ini?"
-    );
+    const confirmed = await confirm({
+      title: "Hapus venue?",
+      message: "Venue ini akan dihapus dan tidak dapat dipulihkan.",
+      confirmLabel: "Hapus venue",
+    });
 
     if (!confirmed) return;
 

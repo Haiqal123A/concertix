@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ConfirmationProvider } from "./components/ConfirmationProvider";
 
 import Home from "./pages/Home";
 import AllConcerts from "./pages/AllConcerts";
@@ -10,6 +12,7 @@ import Orders from "./pages/Orders";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import OrderDetail from "./pages/OrderDetail";
+import PetugasTicketScanner from "./pages/PetugasTicketScanner";
 import AdminTicketScanner from "./pages/admin/AdminTicketScanner";
 
 import AdminPayments from "./pages/admin/AdminPayments";
@@ -27,14 +30,32 @@ import AdminLayout from "./components/admin/AdminLayout";
 
 function UserLayout({ children }) {
   return (
-    <>
+    <ConfirmationProvider>
       <Navbar />
       <div className="pb-20 md:pb-0">{children}</div>
-    </>
+    </ConfirmationProvider>
   );
 }
 
 function App() {
+  useEffect(() => {
+    const warnBeforeLeaving = (event) => {
+      if (
+        !sessionStorage.getItem("token") &&
+        !localStorage.getItem("token")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () =>
+      window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
@@ -200,8 +221,19 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
               <AdminLayout>
-                <AdminTicketScanner />
+                <AdminTicketScanner canManageStaff />
               </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/petugas/scan"
+          element={
+            <ProtectedRoute allowedRoles={["petugas"]}>
+              <ConfirmationProvider>
+                <PetugasTicketScanner />
+              </ConfirmationProvider>
             </ProtectedRoute>
           }
         />

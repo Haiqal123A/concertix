@@ -462,6 +462,14 @@ router.get(
             created_at,
             customer_name,
             customer_email,
+            concert_order_numbers (
+              concert_id,
+              order_number,
+              concerts (
+                id,
+                title
+              )
+            ),
             users (id, name, email)
           )
         `)
