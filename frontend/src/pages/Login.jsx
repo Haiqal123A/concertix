@@ -55,19 +55,7 @@ function Login() {
         // Admin langsung ke dashboard
         navigate("/admin", { replace: true });
       } else {
-        // User biasa cek selectedTicket atau ke home
-        const selectedTicket =
-          localStorage.getItem("selectedTicket");
-
-        if (selectedTicket) {
-          const ticketData = JSON.parse(selectedTicket);
-
-          navigate(
-            `/concert/${ticketData.concert_id}`
-          );
-        } else {
-          navigate("/");
-        }
+        navigate("/", { replace: true });
       }
     } catch (err) {
       console.error("LOGIN ERROR:", err);

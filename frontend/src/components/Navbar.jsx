@@ -1,43 +1,44 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Compass,
+  House,
+  LogOut,
+  Shield,
+  Ticket,
+  UserRound,
+} from "lucide-react";
 
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
+  const [accountOpen, setAccountOpen] = useState(false);
+  const activeSection = location.hash.replace("#", "");
 
   const token = sessionStorage.getItem("token");
   const userData = sessionStorage.getItem("user");
 
-  let user = null;
-
-  try {
-    user = userData ? JSON.parse(userData) : null;
-  } catch {
-    user = null;
-  }
+  const user = (() => {
+    try {
+      return userData ? JSON.parse(userData) : null;
+    } catch {
+      return null;
+    }
+  })();
 
   const isHome = location.pathname === "/";
+  const isConcerts = location.pathname === "/concerts";
   const isOrders = location.pathname === "/orders";
   const isLogin = location.pathname === "/login";
   const isRegister = location.pathname === "/register";
-
-  // =====================================================
-  // ACTIVE SECTION
-  // =====================================================
-
-  useEffect(() => {
-    setActiveSection(location.hash.replace("#", ""));
-  }, [location.hash]);
 
   // =====================================================
   // CLOSE MOBILE
   // =====================================================
 
   const closeMobile = () => {
-    setMobileOpen(false);
+    setAccountOpen(false);
   };
 
   // =====================================================
@@ -48,7 +49,7 @@ function Navbar() {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
 
-    setMobileOpen(false);
+    setAccountOpen(false);
 
     navigate("/login", {
       replace: true,
@@ -62,8 +63,6 @@ function Navbar() {
   const goHome = () => {
     closeMobile();
 
-    setActiveSection("");
-
     navigate("/", {
       replace: false,
     });
@@ -75,35 +74,6 @@ function Navbar() {
   };
 
   // =====================================================
-  // SECTION NAVIGATION
-  // =====================================================
-
-  const goToSection = (section) => {
-    closeMobile();
-
-    setActiveSection(section);
-
-    // Kalau bukan Home
-    if (!isHome) {
-      navigate(`/#${section}`);
-      return;
-    }
-
-    // Kalau sudah di Home
-    const element = document.getElementById(section);
-
-    if (element) {
-      // update URL hash
-      window.history.pushState(null, "", `/#${section}`);
-
-      element.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  };
-
-  // =====================================================
   // NAV ITEM
   // =====================================================
 
@@ -111,32 +81,33 @@ function Navbar() {
     group relative
     rounded-xl
     px-4 py-2.5
-    text-sm font-bold
+    text-sm font-semibold
     transition-all duration-300
     ${
       active
-        ? "text-slate-950"
-        : "text-slate-500 hover:text-slate-950"
+        ? "bg-violet-50 text-violet-700"
+        : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
     }
   `;
 
   return (
+    <>
     <header className="fixed left-0 right-0 top-0 z-50">
 
       {/* Glow */}
       <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-[500px] -translate-x-1/2 bg-violet-400/10 blur-[90px]" />
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 pt-3 sm:px-6 lg:px-8">
 
         <nav
           className="
-            rounded-[22px]
-            border border-white/70
-            bg-white/80
-            px-5 py-3
-            shadow-[0_10px_40px_rgba(15,23,42,0.07)]
+            rounded-2xl
+            border border-slate-200/80
+            bg-white/90
+            px-4 py-3
+            shadow-[0_12px_38px_rgba(15,23,42,0.06)]
             backdrop-blur-2xl
-            sm:px-6
+            sm:px-5
           "
         >
 
@@ -160,14 +131,14 @@ function Navbar() {
                 className="
                   relative flex h-10 w-10
                   items-center justify-center
-                  overflow-hidden rounded-xl
-                  bg-slate-950
+                  overflow-hidden rounded-[14px]
+                  bg-violet-700
                   text-sm font-black text-white
                   shadow-[0_8px_25px_rgba(15,23,42,0.18)]
                   transition-all duration-300
                   group-hover:-rotate-3
                   group-hover:scale-105
-                  group-hover:bg-violet-600
+                  group-hover:bg-slate-950
                 "
               >
                 <span className="relative z-10">
@@ -192,10 +163,6 @@ function Navbar() {
                   <span className="text-violet-600">
                     IX
                   </span>
-                </p>
-
-                <p className="mt-1 hidden text-[8px] font-bold uppercase tracking-[0.22em] text-slate-400 sm:block">
-                  Live the moment
                 </p>
 
               </div>
@@ -237,57 +204,13 @@ function Navbar() {
 
               {/* EXPLORE */}
 
-              <button
-                onClick={() => goToSection("explore")}
-                className={navItemClass(
-                  activeSection === "explore"
-                )}
+              <Link
+                to="/concerts"
+                onClick={closeMobile}
+                className={navItemClass(isConcerts)}
               >
-                Explore
-
-                <span
-                  className={`
-                    absolute bottom-0 left-1/2
-                    h-[3px]
-                    -translate-x-1/2
-                    rounded-full
-                    bg-violet-600
-                    transition-all duration-300
-                    ${
-                      activeSection === "explore"
-                        ? "w-6 opacity-100"
-                        : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100"
-                    }
-                  `}
-                />
-              </button>
-
-              {/* WHY */}
-
-              <button
-                onClick={() => goToSection("why")}
-                className={navItemClass(
-                  activeSection === "why"
-                )}
-              >
-                Why Concertix
-
-                <span
-                  className={`
-                    absolute bottom-0 left-1/2
-                    h-[3px]
-                    -translate-x-1/2
-                    rounded-full
-                    bg-violet-600
-                    transition-all duration-300
-                    ${
-                      activeSection === "why"
-                        ? "w-6 opacity-100"
-                        : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100"
-                    }
-                  `}
-                />
-              </button>
+                Semua Konser
+              </Link>
 
               {/* ORDERS */}
 
@@ -296,7 +219,7 @@ function Navbar() {
                   to="/orders"
                   className={navItemClass(isOrders)}
                 >
-                  My Orders
+                  My Order
 
                   <span
                     className={`
@@ -461,262 +384,123 @@ function Navbar() {
 
             </div>
 
-            {/* =================================================
-                MOBILE
-            ================================================= */}
-
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="
-                flex h-10 w-10
-                items-center justify-center
-                rounded-xl
-                border border-slate-200
-                bg-white
-                text-slate-700
-                transition-all duration-300
-                hover:border-violet-300
-                hover:bg-violet-50
-                hover:text-violet-600
-                md:hidden
-              "
-              aria-label="Toggle menu"
-              aria-expanded={mobileOpen}
-            >
-              <span
-                className={`text-lg transition-transform duration-300 ${
-                  mobileOpen ? "rotate-90" : ""
-                }`}
-              >
-                {mobileOpen ? "✕" : "☰"}
-              </span>
-            </button>
-
           </div>
-
-          {/* =====================================================
-              MOBILE MENU
-          ===================================================== */}
-
-          {mobileOpen && (
-            <div className="mt-4 border-t border-slate-200/80 pt-4 md:hidden">
-
-              <div className="grid gap-2">
-
-                {/* HOME */}
-
-                <button
-                  onClick={goHome}
-                  className={`
-                    flex items-center gap-3
-                    rounded-xl px-4 py-3
-                    text-left
-                    text-sm font-bold
-                    transition-all duration-300
-                    ${
-                      isHome && !activeSection
-                        ? "bg-slate-950 text-white shadow-lg"
-                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
-                    }
-                  `}
-                >
-                  <span>⌂</span>
-                  Home
-                </button>
-
-                {/* EXPLORE */}
-
-                <button
-                  onClick={() => goToSection("explore")}
-                  className={`
-                    flex items-center gap-3
-                    rounded-xl px-4 py-3
-                    text-left
-                    text-sm font-bold
-                    transition-all duration-300
-                    ${
-                      activeSection === "explore"
-                        ? "bg-slate-950 text-white shadow-lg"
-                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
-                    }
-                  `}
-                >
-                  <span>✦</span>
-                  Explore
-                </button>
-
-                {/* WHY */}
-
-                <button
-                  onClick={() => goToSection("why")}
-                  className={`
-                    flex items-center gap-3
-                    rounded-xl px-4 py-3
-                    text-left
-                    text-sm font-bold
-                    transition-all duration-300
-                    ${
-                      activeSection === "why"
-                        ? "bg-slate-950 text-white shadow-lg"
-                        : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
-                    }
-                  `}
-                >
-                  <span>◈</span>
-                  Why Concertix
-                </button>
-
-                {/* ORDERS */}
-
-                {token && (
-                  <Link
-                    to="/orders"
-                    onClick={closeMobile}
-                    className={`
-                      flex items-center gap-3
-                      rounded-xl px-4 py-3
-                      text-sm font-bold
-                      transition-all duration-300
-                      ${
-                        isOrders
-                          ? "bg-slate-950 text-white shadow-lg"
-                          : "text-slate-700 hover:bg-violet-50 hover:text-violet-600"
-                      }
-                    `}
-                  >
-                    <span>◎</span>
-                    My Orders
-                  </Link>
-                )}
-
-                <div className="my-2 h-px bg-slate-200" />
-
-                {/* USER */}
-
-                {token && user ? (
-
-                  <>
-                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-
-                      <div
-                        className="
-                          flex h-10 w-10
-                          items-center justify-center
-                          rounded-xl
-                          bg-gradient-to-br
-                          from-violet-500
-                          to-fuchsia-500
-                          font-black text-white
-                        "
-                      >
-                        {user.name?.charAt(0)?.toUpperCase() || "U"}
-                      </div>
-
-                      <div>
-
-                        <p className="text-sm font-black text-slate-900">
-                          {user.name || "User"}
-                        </p>
-
-                        <p className="text-xs capitalize text-slate-400">
-                          {user.role || "user"}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                    {/* ADMIN DASHBOARD - Mobile */}
-                    {user.role === "admin" && (
-                      <Link
-                        to="/admin"
-                        onClick={closeMobile}
-                        className="
-                          flex items-center gap-3
-                          rounded-xl
-                          bg-violet-50
-                          px-4 py-3
-                          text-left
-                          text-sm font-bold
-                          text-violet-600
-                          transition-all duration-300
-                          hover:bg-violet-100
-                        "
-                      >
-                        <span>🔐</span>
-                        Admin Dashboard
-                      </Link>
-                    )}
-
-                    <button
-                      onClick={logout}
-                      className="
-                        flex items-center gap-3
-                        rounded-xl
-                        bg-red-50
-                        px-4 py-3
-                        text-left
-                        text-sm font-bold
-                        text-red-500
-                        transition-all duration-300
-                        hover:bg-red-100
-                      "
-                    >
-                      <span>↪</span>
-                      Logout
-                    </button>
-                  </>
-
-                ) : (
-
-                  <>
-                    <Link
-                      to="/register"
-                      onClick={closeMobile}
-                      className="
-                        flex items-center justify-center
-                        rounded-xl
-                        border border-slate-200
-                        bg-white
-                        px-4 py-3
-                        text-sm font-bold
-                        text-slate-700
-                        transition-all duration-300
-                        hover:border-violet-300
-                        hover:bg-violet-50
-                        hover:text-violet-600
-                      "
-                    >
-                      Create Account
-                    </Link>
-
-                    <Link
-                      to="/login"
-                      onClick={closeMobile}
-                      className="
-                        flex items-center justify-center
-                        rounded-xl
-                        bg-slate-950
-                        px-4 py-3
-                        text-sm font-bold
-                        text-white
-                        transition-all duration-300
-                        hover:bg-violet-600
-                      "
-                    >
-                      Login
-                    </Link>
-                  </>
-
-                )}
-
-              </div>
-            </div>
-          )}
 
         </nav>
       </div>
     </header>
+
+    <nav
+      aria-label="Navigasi mobile"
+      className="fixed inset-x-0 bottom-0 z-[60] border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-xl md:hidden"
+    >
+      {accountOpen && token && user && (
+        <div className="absolute bottom-full left-3 right-3 mb-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+          <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 font-black text-white">
+              {user.name?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-slate-900">
+                {user.name || "User"}
+              </p>
+              <p className="text-xs capitalize text-slate-500">
+                {user.role || "user"}
+              </p>
+            </div>
+          </div>
+
+          {user.role === "admin" && (
+            <Link
+              to="/admin"
+              onClick={closeMobile}
+              className="mt-2 flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-2.5 text-sm font-semibold text-violet-700"
+            >
+              <Shield size={17} />
+              Admin Dashboard
+            </Link>
+          )}
+
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-2 flex w-full items-center gap-2 rounded-xl bg-red-50 px-3 py-2.5 text-left text-sm font-semibold text-red-600"
+          >
+            <LogOut size={17} />
+            Logout
+          </button>
+        </div>
+      )}
+
+      <div
+        className={`mx-auto grid max-w-xl px-2 ${
+          token && user ? "grid-cols-4" : "grid-cols-3"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={goHome}
+          className={`flex min-w-0 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold ${
+            isHome && !activeSection
+              ? "text-violet-700"
+              : "text-slate-500"
+          }`}
+        >
+          <House size={19} />
+          Home
+        </button>
+
+        <Link
+          to="/concerts"
+          onClick={closeMobile}
+          className={`flex min-w-0 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold ${
+            isConcerts ? "text-violet-700" : "text-slate-500"
+          }`}
+        >
+          <Compass size={19} />
+          Konser
+        </Link>
+
+        {token && user ? (
+          <>
+            <Link
+              to="/orders"
+              onClick={closeMobile}
+              className={`flex min-w-0 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold ${
+                isOrders ? "text-violet-700" : "text-slate-500"
+              }`}
+            >
+              <Ticket size={19} />
+              Pesanan
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setAccountOpen((open) => !open)}
+              aria-expanded={accountOpen}
+              className={`flex min-w-0 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold ${
+                accountOpen ? "text-violet-700" : "text-slate-500"
+              }`}
+            >
+              <UserRound size={19} />
+              Akun
+            </button>
+          </>
+        ) : (
+          <Link
+            to="/login"
+            onClick={closeMobile}
+            className={`flex min-w-0 flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold ${
+              isLogin ? "text-violet-700" : "text-slate-500"
+            }`}
+          >
+            <UserRound size={19} />
+            Login
+          </Link>
+        )}
+      </div>
+    </nav>
+    </>
   );
 }
 

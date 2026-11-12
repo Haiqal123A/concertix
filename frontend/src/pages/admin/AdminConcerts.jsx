@@ -117,7 +117,8 @@ function AdminConcerts() {
       description: concert.description || "",
       concert_date: concert.concert_date || "",
       concert_time: concert.concert_time || "",
-      status: concert.status || "upcoming",
+      status:
+        concert.configured_status === "cancelled" ? "cancelled" : "upcoming",
     });
 
     setShowForm(true);
@@ -227,6 +228,9 @@ function AdminConcerts() {
 
       case "finished":
         return "bg-neutral-100 text-neutral-600 border-neutral-200";
+
+      case "sold_out":
+        return "bg-amber-50 text-amber-700 border-amber-200";
 
       case "cancelled":
         return "bg-red-50 text-red-600 border-red-200";
@@ -457,15 +461,7 @@ function AdminConcerts() {
                   className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-violet-400 focus:bg-white focus:ring-4 focus:ring-violet-50"
                 >
                   <option value="upcoming">
-                    Upcoming
-                  </option>
-
-                  <option value="ongoing">
-                    Ongoing
-                  </option>
-
-                  <option value="finished">
-                    Finished
+                    Otomatis berdasarkan tanggal & tiket
                   </option>
 
                   <option value="cancelled">
@@ -723,7 +719,13 @@ function AdminConcerts() {
                             concert.status
                           )}`}
                         >
-                          {concert.status}
+                          {{
+                            upcoming: "Upcoming",
+                            ongoing: "Ongoing",
+                            sold_out: "Sold Out",
+                            finished: "Finished",
+                            cancelled: "Cancelled",
+                          }[concert.status] || concert.status}
                         </span>
                       </td>
 

@@ -1,5 +1,85 @@
 const supabase = require("../config/supabase");
 
+const getJakartaDate = () =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+const addConcertDisplayStatus = async (concerts) => {
+  if (concerts.length === 0) return concerts;
+
+  const concertIds = concerts.map((concert) => concert.id);
+  const { data: ticketTypes, error } = await supabase
+    .from("ticket_types")
+    .select("concert_id, stock, sold, reserved")
+    .in("concert_id", concertIds);
+
+  if (error) throw error;
+
+  const ticketsByConcert = new Map();
+  for (const ticket of ticketTypes || []) {
+    const tickets = ticketsByConcert.get(ticket.concert_id) || [];
+    tickets.push(ticket);
+    ticketsByConcert.set(ticket.concert_id, tickets);
+  }
+
+  const today = getJakartaDate();
+  return concerts
+    .map((concert) => {
+      const configuredStatus = concert.status || "upcoming";
+      const tickets = ticketsByConcert.get(concert.id) || [];
+      const isSoldOut =
+        tickets.length > 0 &&
+        tickets.every(
+          (ticket) =>
+            Number(ticket.stock || 0) -
+              Number(ticket.sold || 0) -
+              Number(ticket.reserved || 0) <=
+            0
+        );
+
+      let status = "upcoming";
+      if (configuredStatus === "cancelled") {
+        status = "cancelled";
+      } else if (concert.concert_date < today) {
+        status = "finished";
+      } else if (concert.concert_date === today) {
+        status = "ongoing";
+      } else if (isSoldOut) {
+        status = "sold_out";
+      }
+
+      return {
+        ...concert,
+        configured_status: configuredStatus,
+        status,
+      };
+    })
+    .sort((a, b) => {
+      const rank = {
+        upcoming: 0,
+        ongoing: 1,
+        sold_out: 2,
+        cancelled: 3,
+        finished: 4,
+      };
+      const statusDifference =
+        (rank[a.status] ?? 5) - (rank[b.status] ?? 5);
+
+      if (statusDifference !== 0) return statusDifference;
+
+      const dateDifference = String(a.concert_date || "").localeCompare(
+        String(b.concert_date || "")
+      );
+      return a.status === "finished" || a.status === "cancelled"
+        ? -dateDifference
+        : dateDifference;
+    });
+};
+
 // GET semua konser
 exports.getAllConcerts = async (req, res) => {
   try {
@@ -26,10 +106,12 @@ exports.getAllConcerts = async (req, res) => {
 
     if (error) throw error;
 
+    const concerts = await addConcertDisplayStatus(data);
+
     res.json({
       success: true,
-      total: data.length,
-      data,
+      total: concerts.length,
+      data: concerts,
     });
   } catch (err) {
     res.status(500).json({
@@ -68,9 +150,11 @@ exports.getConcertById = async (req, res) => {
 
     if (error) throw error;
 
+    const [concert] = await addConcertDisplayStatus([data]);
+
     res.json({
       success: true,
-      data,
+      data: concert,
     });
   } catch (err) {
     res.status(404).json({
@@ -200,4 +284,3 @@ exports.deleteConcert = async (req, res) => {
     });
   }
 };
-

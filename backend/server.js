@@ -16,6 +16,7 @@ const concertRoutes = require("./routes/concertRoutes");
 const ticketTypeRoutes = require("./routes/ticketTypeRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const ticketRoutes = require("./routes/ticketRoutes");
 
 app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
@@ -26,6 +27,7 @@ app.use("/api/concerts", concertRoutes);
 app.use("/api/ticket-types", ticketTypeRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/tickets", ticketRoutes);
 
 app.get("/", (req, res) => {
   res.json({

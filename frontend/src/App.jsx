@@ -4,11 +4,13 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Home from "./pages/Home";
+import AllConcerts from "./pages/AllConcerts";
 import ConcertDetail from "./pages/ConcertDetail";
 import Orders from "./pages/Orders";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import OrderDetail from "./pages/OrderDetail";
+import AdminTicketScanner from "./pages/admin/AdminTicketScanner";
 
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -27,7 +29,7 @@ function UserLayout({ children }) {
   return (
     <>
       <Navbar />
-      {children}
+      <div className="pb-20 md:pb-0">{children}</div>
     </>
   );
 }
@@ -61,6 +63,15 @@ function App() {
           element={
             <UserLayout>
               <Home />
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path="/concerts"
+          element={
+            <UserLayout>
+              <AllConcerts />
             </UserLayout>
           }
         />
@@ -179,6 +190,17 @@ function App() {
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminLayout>
                 <AdminPayments />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/ticket-scanner"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+              <AdminLayout>
+                <AdminTicketScanner />
               </AdminLayout>
             </ProtectedRoute>
           }

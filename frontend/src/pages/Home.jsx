@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  ArrowUpRight,
+  ShieldCheck,
+  Ticket,
+  Zap,
+} from "lucide-react";
 import api from "../services/api";
-import Navbar from "../components/Navbar";
 
 function Home() {
   const [concerts, setConcerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
 
   // =====================================================
   // GET CONCERTS
@@ -58,40 +60,6 @@ function Home() {
   }, [concerts]);
 
   // =====================================================
-  // FILTER
-  // =====================================================
-
-  const filteredConcerts = useMemo(() => {
-    const keyword = search.toLowerCase().trim();
-
-    return concerts.filter((concert) => {
-      const title = concert.title?.toLowerCase() || "";
-
-      const artist =
-        concert.artist?.name?.toLowerCase() ||
-        concert.artists?.name?.toLowerCase() ||
-        concert.artist_name?.toLowerCase() ||
-        "";
-
-      const category =
-        concert.category?.name ||
-        concert.categories?.name ||
-        concert.category_name ||
-        "";
-
-      const matchesSearch =
-        title.includes(keyword) ||
-        artist.includes(keyword);
-
-      const matchesCategory =
-        selectedCategory === "All" ||
-        category === selectedCategory;
-
-      return matchesSearch && matchesCategory;
-    });
-  }, [concerts, search, selectedCategory]);
-
-  // =====================================================
   // STATISTICS
   // =====================================================
 
@@ -114,45 +82,30 @@ function Home() {
       .filter(Boolean)
   ).size;
 
-  // =====================================================
-  // RESET FILTER
-  // =====================================================
-
-  const resetFilter = () => {
-    setSearch("");
-    setSelectedCategory("All");
-  };
-
   return (
     <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 selection:bg-violet-200 selection:text-violet-900">
-
-      {/* =====================================================
-          NAVBAR
-      ===================================================== */}
-
-      <Navbar />
 
       {/* =====================================================
           HERO
       ===================================================== */}
 
-      <section className="relative overflow-hidden pt-24">
+      <section className="relative mx-4 mt-24 overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 pt-12 text-white shadow-xl shadow-violet-950/10 sm:mx-6 xl:mx-auto xl:max-w-[1360px]">
 
         {/* Background */}
 
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950 to-slate-900" />
 
-        <div className="absolute -right-40 -top-40 h-[550px] w-[550px] rounded-full bg-violet-300/25 blur-[120px]" />
+        <div className="absolute -right-40 -top-40 h-[550px] w-[550px] rounded-full bg-violet-600/25 blur-[120px]" />
 
-        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-fuchsia-300/20 blur-[120px]" />
+        <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-fuchsia-600/15 blur-[120px]" />
 
-        <div className="absolute right-[35%] top-[35%] h-40 w-40 rounded-full bg-purple-300/20 blur-[80px]" />
+        <div className="absolute right-[35%] top-[35%] h-40 w-40 rounded-full bg-purple-500/15 blur-[80px]" />
 
         {/* =====================================================
             HERO CONTENT
         ===================================================== */}
 
-        <div className="relative mx-auto max-w-7xl px-5 pb-20 pt-12 sm:px-6 lg:px-8 lg:pb-28 lg:pt-20">
+        <div className="relative mx-auto max-w-7xl px-5 pb-12 pt-12 sm:px-6 lg:px-8 lg:pb-20 lg:pt-16">
 
           {/* =================================================
               HERO GRID
@@ -168,7 +121,7 @@ function Home() {
 
               {/* Heading */}
 
-              <h1 className="max-w-3xl text-5xl font-black leading-[0.94] tracking-[-0.06em] text-slate-950 sm:text-6xl lg:text-[76px]">
+              <h1 className="max-w-3xl text-5xl font-black leading-[0.94] tracking-[-0.06em] text-white sm:text-6xl lg:text-[76px]">
 
                 Your next
 
@@ -186,7 +139,7 @@ function Home() {
 
               {/* Description */}
 
-              <p className="mt-7 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
+              <p className="mt-7 max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
 
                 Temukan konser favoritmu, pilih tiket
                 yang sesuai, dan nikmati pengalaman
@@ -206,20 +159,20 @@ function Home() {
 
                 
 
-                <a
-                  href="#explore"
-                  className="group rounded-xl bg-slate-950 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-slate-900/10 transition-all hover:-translate-y-1 hover:bg-violet-600"
+                <Link
+                  to="/concerts"
+                  className="group rounded-xl bg-violet-700 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-950/30 transition-all hover:-translate-y-1 hover:bg-violet-600"
                 >
-                  Explore Concert
+                  Semua Konser
 
                   <span className="ml-2 inline-block transition group-hover:translate-x-1">
                     →
                   </span>
-                </a>
+                </Link>
 
                 <Link
                   to="/orders"
-                  className="rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:-translate-y-1 hover:border-violet-300 hover:text-violet-600"
+                  className="rounded-xl border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-bold text-white backdrop-blur transition-all hover:-translate-y-1 hover:border-white/30 hover:bg-white/15"
                 >
                   My Orders
                 </Link>
@@ -239,14 +192,14 @@ function Home() {
                 <div
                   className="
                     group rounded-2xl
-                    border border-white/70
-                    bg-white/70
+                    border border-white/10
+                    bg-white/[0.07]
                     px-4 py-4
-                    shadow-[0_10px_35px_rgba(15,23,42,0.06)]
+                    shadow-[0_10px_35px_rgba(0,0,0,0.12)]
                     backdrop-blur-xl
                     transition-all duration-300
                     hover:-translate-y-1
-                    hover:border-violet-200
+                    hover:border-violet-300/40
                     hover:shadow-[0_18px_45px_rgba(124,58,237,0.10)]
                   "
                 >
@@ -257,8 +210,8 @@ function Home() {
                       className="
                         flex h-8 w-8 items-center justify-center
                         rounded-lg
-                        bg-violet-50
-                        text-violet-600
+                        bg-violet-500/15
+                        text-violet-300
                         transition-transform duration-300
                         group-hover:scale-110
                       "
@@ -274,7 +227,7 @@ function Home() {
 
                   </div>
 
-                  <p className="mt-4 text-2xl font-black tracking-tight text-slate-950">
+                  <p className="mt-4 text-2xl font-black tracking-tight text-white">
                     {loading ? "-" : totalConcerts}
                   </p>
 
@@ -291,14 +244,14 @@ function Home() {
                 <div
                   className="
                     group rounded-2xl
-                    border border-white/70
-                    bg-white/70
+                    border border-white/10
+                    bg-white/[0.07]
                     px-4 py-4
-                    shadow-[0_10px_35px_rgba(15,23,42,0.06)]
+                    shadow-[0_10px_35px_rgba(0,0,0,0.12)]
                     backdrop-blur-xl
                     transition-all duration-300
                     hover:-translate-y-1
-                    hover:border-fuchsia-200
+                    hover:border-fuchsia-300/40
                     hover:shadow-[0_18px_45px_rgba(217,70,239,0.10)]
                   "
                 >
@@ -309,8 +262,8 @@ function Home() {
                       className="
                         flex h-8 w-8 items-center justify-center
                         rounded-lg
-                        bg-fuchsia-50
-                        text-fuchsia-600
+                        bg-fuchsia-500/15
+                        text-fuchsia-300
                         transition-transform duration-300
                         group-hover:scale-110
                       "
@@ -326,7 +279,7 @@ function Home() {
 
                   </div>
 
-                  <p className="mt-4 text-2xl font-black tracking-tight text-slate-950">
+                  <p className="mt-4 text-2xl font-black tracking-tight text-white">
                     {loading ? "-" : totalCategories}
                   </p>
 
@@ -343,14 +296,14 @@ function Home() {
                 <div
                   className="
                     group rounded-2xl
-                    border border-white/70
-                    bg-white/70
+                    border border-white/10
+                    bg-white/[0.07]
                     px-4 py-4
-                    shadow-[0_10px_35px_rgba(15,23,42,0.06)]
+                    shadow-[0_10px_35px_rgba(0,0,0,0.12)]
                     backdrop-blur-xl
                     transition-all duration-300
                     hover:-translate-y-1
-                    hover:border-indigo-200
+                    hover:border-indigo-300/40
                     hover:shadow-[0_18px_45px_rgba(79,70,229,0.10)]
                   "
                 >
@@ -361,8 +314,8 @@ function Home() {
                       className="
                         flex h-8 w-8 items-center justify-center
                         rounded-lg
-                        bg-indigo-50
-                        text-indigo-600
+                        bg-indigo-500/15
+                        text-indigo-300
                         transition-transform duration-300
                         group-hover:scale-110
                       "
@@ -378,7 +331,7 @@ function Home() {
 
                   </div>
 
-                  <p className="mt-4 text-2xl font-black tracking-tight text-slate-950">
+                  <p className="mt-4 text-2xl font-black tracking-tight text-white">
                     {loading ? "-" : totalVenues}
                   </p>
 
@@ -418,11 +371,6 @@ function Home() {
                     {/* Featured Badge */}
 
                     <div className="absolute right-6 top-6">
-
-                      <span className="rounded-full border border-white/20 bg-black/30 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white backdrop-blur-xl">
-                        Featured Event
-                      </span>
-
                     </div>
 
                     {/* Content */}
@@ -480,308 +428,46 @@ function Home() {
 
       </section>
 
+      {error && !loading && (
+        <p
+          role="alert"
+          className="mx-4 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 sm:mx-6 xl:mx-auto xl:max-w-[1360px]"
+        >
+          {error}
+        </p>
+      )}
+
       {/* =====================================================
           EXPLORE
       ===================================================== */}
 
       <section
         id="explore"
-        className="scroll-mt-24 mx-auto max-w-7xl px-5 py-20 sm:px-6 lg:px-8"
+        className="mx-4 my-8 max-w-[1360px] overflow-hidden rounded-[28px] border border-slate-800 bg-slate-950 text-white shadow-xl shadow-violet-950/10 sm:mx-6 xl:mx-auto"
       >
+        <div className="relative isolate overflow-hidden rounded-[24px] px-6 py-10 sm:px-10 sm:py-12">
+          <div className="pointer-events-none absolute -right-16 -top-32 -z-10 h-80 w-80 rounded-full bg-violet-600/25 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 left-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-500/15 blur-3xl" />
+          <div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
 
-        {/* Header */}
-
-        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-
-          <div>
-
-            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">
-              Find your next event
-            </h2>
-
-            <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
-              Jelajahi berbagai konser dan event yang tersedia.
-            </p>
-
-          </div>
-
-          {!loading && (
-            <div className="w-fit rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-500 shadow-sm">
-              {filteredConcerts.length} event ditemukan
-            </div>
-          )}
-
-        </div>
-
-        {/* =====================================================
-            FILTER
-        ===================================================== */}
-
-        <div className="mb-10 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
-
-          <div className="flex flex-col gap-3 lg:flex-row">
-
-            {/* Search */}
-
-            <div className="flex flex-1 items-center rounded-xl bg-slate-50 px-4 ring-1 ring-inset ring-slate-100">
-
-              <span className="mr-3 text-lg">
-                🔎
-              </span>
-
-              <input
-                type="text"
-                placeholder="Search concert..."
-                value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-                className="w-full bg-transparent py-3.5 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
-              />
-
-            </div>
-
-            {/* Categories */}
-
-            <div className="flex gap-2 overflow-x-auto pb-1 lg:max-w-[55%]">
-
-              {categories.map((category) => (
-
-                <button
-                  key={category}
-                  onClick={() =>
-                    setSelectedCategory(category)
-                  }
-                  className={`whitespace-nowrap rounded-xl px-5 py-3 text-sm font-bold transition-all ${
-                    selectedCategory === category
-                      ? "bg-slate-950 text-white shadow-lg"
-                      : "border border-slate-200 bg-white text-slate-500 hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-600"
-                  }`}
-                >
-
-                  {category === "All"
-                    ? "All Events"
-                    : category}
-
-                </button>
-
-              ))}
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* =====================================================
-            LOADING
-        ===================================================== */}
-
-        {loading && (
-
-          <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-
-            {[1, 2, 3].map((item) => (
-
-              <div
-                key={item}
-                className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"
-              >
-
-                <div className="h-[330px] animate-pulse bg-slate-100" />
-
-                <div className="space-y-4 p-6">
-
-                  <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
-
-                  <div className="h-6 w-3/4 animate-pulse rounded bg-slate-100" />
-
-                  <div className="h-4 w-1/2 animate-pulse rounded bg-slate-100" />
-
-                </div>
-
-              </div>
-
-            ))}
-
-          </div>
-
-        )}
-
-        {/* =====================================================
-            ERROR
-        ===================================================== */}
-
-        {error && !loading && (
-
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm font-semibold text-red-600">
-            {error}
-          </div>
-
-        )}
-
-        {/* =====================================================
-            EMPTY
-        ===================================================== */}
-
-        {!loading &&
-          !error &&
-          filteredConcerts.length === 0 && (
-
-            <div className="rounded-[28px] border border-slate-200 bg-white p-14 text-center shadow-sm">
-
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-3xl">
-                🎫
-              </div>
-
-              <h3 className="mt-5 text-xl font-black text-slate-950">
-                Konser tidak ditemukan
-              </h3>
-
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                Coba gunakan kata kunci atau kategori
-                yang berbeda.
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                Temukan momen berikutnya.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-300 sm:text-base">
+                Lihat semua konser, cari berdasarkan artis atau lokasi, dan
+                temukan acara yang sesuai jadwalmu.
               </p>
-
-              <button
-                onClick={resetFilter}
-                className="mt-6 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-600"
-              >
-                Reset Filter
-              </button>
-
             </div>
-
-          )}
-
-        {/* =====================================================
-            CONCERT GRID
-        ===================================================== */}
-
-        {!loading &&
-          !error &&
-          filteredConcerts.length > 0 && (
-
-            <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-
-              {filteredConcerts.map((concert) => {
-
-                const category =
-                  concert.category?.name ||
-                  concert.categories?.name ||
-                  concert.category_name;
-
-                const artist =
-                  concert.artist?.name ||
-                  concert.artists?.name ||
-                  concert.artist_name;
-
-                return (
-
-                  <Link
-                    key={concert.id}
-                    to={`/concert/${concert.id}`}
-                    className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_8px_35px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-2 hover:border-violet-200 hover:shadow-[0_25px_60px_rgba(76,29,149,0.14)]"
-                  >
-
-                    {/* Poster */}
-
-                    <div className="relative h-[330px] overflow-hidden bg-slate-100">
-
-                      <img
-                        src={concert.poster}
-                        alt={concert.title}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
-
-                      {/* Status */}
-
-                      <div className="absolute left-4 top-4">
-
-                        <span className="rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-white backdrop-blur-xl">
-                          {concert.status || "Upcoming"}
-                        </span>
-
-                      </div>
-
-                      {/* Category */}
-
-                      {category && (
-
-                        <div className="absolute bottom-4 left-4">
-
-                          <span className="rounded-full bg-violet-600 px-3 py-1.5 text-xs font-bold text-white shadow-lg">
-                            {category}
-                          </span>
-
-                        </div>
-
-                      )}
-
-                    </div>
-
-                    {/* Info */}
-
-                    <div className="p-6 sm:p-7">
-
-                      <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-violet-600">
-                        {concert.concert_date}
-                      </p>
-
-                      <h3 className="mt-2 line-clamp-2 text-xl font-black leading-snug tracking-tight text-slate-950">
-                        {concert.title}
-                      </h3>
-
-                      {artist && (
-
-                        <p className="mt-3 text-sm font-medium text-slate-500">
-                          🎤 {artist}
-                        </p>
-
-                      )}
-
-                      <div className="mt-5 space-y-2 text-sm text-slate-500">
-
-                        {concert.concert_time && (
-                          <p>
-                            🕐 {concert.concert_time}
-                          </p>
-                        )}
-
-                        {concert.venues && (
-                          <p>
-                            📍 {concert.venues.name},{" "}
-                            {concert.venues.city}
-                          </p>
-                        )}
-
-                      </div>
-
-                      <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
-
-                        <span className="text-sm font-bold text-slate-700">
-                          View Details
-                        </span>
-
-                        <span className="text-lg font-bold text-violet-600 transition group-hover:translate-x-1">
-                          →
-                        </span>
-
-                      </div>
-
-                    </div>
-
-                  </Link>
-
-                );
-
-              })}
-
-            </div>
-
-          )}
+            <Link
+              to="/concerts"
+              className="inline-flex w-fit shrink-0 items-center gap-2 rounded-xl bg-white px-5 py-3.5 text-sm font-bold text-slate-950 transition hover:-translate-y-0.5 hover:bg-violet-100"
+            >
+              Lihat semua konser
+              <ArrowUpRight size={17} />
+            </Link>
+          </div>
+        </div>
 
       </section>
 
@@ -791,40 +477,44 @@ function Home() {
 
       <section
         id="why"
-        className="border-y border-slate-200 bg-slate-100/70"
+        className="scroll-mt-24 border-y border-slate-200/70 bg-white"
       >
 
-        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-5 py-24 sm:px-6 lg:px-8">
 
-          <div className="max-w-2xl">
-
-            <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950 sm:text-4xl">
               Semua kebutuhan konsermu,
               <br />
               dalam satu tempat.
             </h2>
 
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
+              Dari memilih acara hingga tiket siap digunakan, semua terasa
+              sederhana dan nyaman.
+            </p>
+
           </div>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
+          <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-12 sm:gap-5">
 
             {/* =================================================
                 CARD 1
             ================================================= */}
 
-            <div className="group rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+            <div className="group rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-all duration-300 hover:-translate-y-1 hover:border-violet-200 hover:bg-white hover:shadow-xl hover:shadow-violet-950/5 sm:rounded-2xl sm:p-7">
 
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-2xl transition group-hover:scale-110">
-                🎟️
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-700 transition group-hover:bg-violet-700 group-hover:text-white sm:h-12 sm:w-12 sm:rounded-xl">
+                <Ticket size={21} className="h-4 w-4 sm:h-[21px] sm:w-[21px]" />
               </div>
 
-              <h3 className="mt-6 text-lg font-black text-slate-950">
-                Easy Ticketing
+              <h3 className="mt-3 text-xs font-bold leading-tight text-slate-950 sm:mt-5 sm:text-lg">
+                Tiket dalam beberapa langkah
               </h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Temukan konser dan pilih tiket dengan
-                proses yang sederhana.
+              <p className="mt-1.5 text-[10px] leading-4 text-slate-500 sm:mt-2 sm:text-sm sm:leading-6">
+                Temukan acara, pilih kategori, lalu kelola pesananmu dengan
+                mudah.
               </p>
 
             </div>
@@ -833,19 +523,18 @@ function Home() {
                 CARD 2
             ================================================= */}
 
-            <div className="group rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+            <div className="group rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:bg-white hover:shadow-xl hover:shadow-emerald-950/5 sm:rounded-2xl sm:p-7">
 
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl transition group-hover:scale-110">
-                🔒
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 transition group-hover:bg-emerald-600 group-hover:text-white sm:h-12 sm:w-12 sm:rounded-xl">
+                <ShieldCheck size={21} className="h-4 w-4 sm:h-[21px] sm:w-[21px]" />
               </div>
 
-              <h3 className="mt-6 text-lg font-black text-slate-950">
-                Secure Payment
+              <h3 className="mt-3 text-xs font-bold leading-tight text-slate-950 sm:mt-5 sm:text-lg">
+                Pembayaran tepercaya
               </h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Proses pemesanan dan pembayaran dibuat
-                agar lebih aman.
+              <p className="mt-1.5 text-[10px] leading-4 text-slate-500 sm:mt-2 sm:text-sm sm:leading-6">
+                Pantau status pembayaran dan akses tiket digital dari akunmu.
               </p>
 
             </div>
@@ -854,19 +543,19 @@ function Home() {
                 CARD 3
             ================================================= */}
 
-            <div className="group rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+            <div className="group rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 transition-all duration-300 hover:-translate-y-1 hover:border-amber-200 hover:bg-white hover:shadow-xl hover:shadow-amber-950/5 sm:rounded-2xl sm:p-7">
 
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-2xl transition group-hover:scale-110">
-                ⚡
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700 transition group-hover:bg-amber-500 group-hover:text-white sm:h-12 sm:w-12 sm:rounded-xl">
+                <Zap size={21} className="h-4 w-4 sm:h-[21px] sm:w-[21px]" />
               </div>
 
-              <h3 className="mt-6 text-lg font-black text-slate-950">
-                Fast Experience
+              <h3 className="mt-3 text-xs font-bold leading-tight text-slate-950 sm:mt-5 sm:text-lg">
+                Praktis dari awal
               </h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Dari menemukan event sampai mendapatkan
-                tiket dengan cepat.
+              <p className="mt-1.5 text-[10px] leading-4 text-slate-500 sm:mt-2 sm:text-sm sm:leading-6">
+                Informasi konser, pesanan, dan detail tiket tersedia dalam satu
+                pengalaman.
               </p>
 
             </div>
@@ -889,10 +578,6 @@ function Home() {
 
         <div className="relative mx-auto max-w-4xl px-5 py-24 text-center sm:px-6">
 
-          <p className="text-xs font-extrabold tracking-[0.22em] text-violet-300">
-            CONCERTIX
-          </p>
-
           <h2 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
             Your next concert
             <br />
@@ -904,17 +589,17 @@ function Home() {
             pengalaman musik berikutnya.
           </p>
 
-          <a
-            href="#explore"
+          <Link
+            to="/concerts"
             className="mt-8 inline-flex items-center rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-slate-950 transition hover:-translate-y-1 hover:bg-violet-100"
           >
-            Explore Events
+            Lihat semua konser
 
             <span className="ml-2">
               →
             </span>
 
-          </a>
+          </Link>
 
         </div>
 

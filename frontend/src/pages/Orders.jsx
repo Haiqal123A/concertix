@@ -1,286 +1,399 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Compass,
+  Search,
+  Ticket,
+} from "lucide-react";
 import api from "../services/api";
+
+const formatCurrency = (value) =>
+  Number(value || 0).toLocaleString("id-ID");
+
+const formatDate = (value) => {
+  if (!value) return "Tanggal belum tersedia";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Tanggal belum tersedia";
+
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+const getPaymentLabel = (status) => {
+  if (status === "paid") return "Lunas";
+  if (status === "pending") return "Menunggu pembayaran";
+  if (status === "unpaid") return "Belum dibayar";
+  return status || "Belum diketahui";
+};
 
 function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
+  const user = (() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  })();
 
   useEffect(() => {
+    let active = true;
+
     const getOrders = async () => {
       try {
+        setLoading(true);
+        setError("");
         const response = await api.get("/orders");
-
-        setOrders(response.data.data || []);
+        if (active) setOrders(response.data.data || []);
       } catch (err) {
         console.error("GET ORDERS ERROR:", err);
-
-        setError(
-          err.response?.data?.message ||
-            "Gagal mengambil data order."
-        );
+        if (active) {
+          setError(
+            err.response?.data?.message || "Gagal mengambil data pesanan."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     getOrders();
+    return () => {
+      active = false;
+    };
   }, []);
 
+  const counts = useMemo(
+    () => ({
+      all: orders.length,
+      pending: orders.filter(
+        (order) =>
+          order.payment_status === "pending" ||
+          order.payment_status === "unpaid"
+      ).length,
+      paid: orders.filter((order) => order.payment_status === "paid").length,
+    }),
+    [orders]
+  );
+
+  const visibleOrders = useMemo(() => {
+    const keyword = search.trim().toLocaleLowerCase("id-ID");
+
+    return orders.filter((order) => {
+      const isPaid = order.payment_status === "paid";
+      const isPending =
+        order.payment_status === "pending" ||
+        order.payment_status === "unpaid";
+      const matchesFilter =
+        activeFilter === "all" ||
+        (activeFilter === "paid" && isPaid) ||
+        (activeFilter === "pending" && isPending);
+
+      const concertTitle =
+        order.order_items?.[0]?.ticket_types?.concerts?.title || "";
+      const matchesSearch =
+        !keyword ||
+        String(order.id).includes(keyword) ||
+        concertTitle.toLocaleLowerCase("id-ID").includes(keyword);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [activeFilter, orders, search]);
+
+  const filters = [
+    { id: "all", label: "Semua pesanan", count: counts.all },
+    { id: "pending", label: "Menunggu pembayaran", count: counts.pending },
+    { id: "paid", label: "Sudah dibayar", count: counts.paid },
+  ];
+
   return (
-    <div className="min-h-screen overflow-hidden bg-white text-neutral-900">
-      {/* BACKGROUND */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-[450px] w-[450px] rounded-full bg-violet-200/40 blur-3xl" />
+    <main className="min-h-screen bg-slate-50 pb-20 pt-28 text-slate-900 sm:pt-32">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <section className="relative isolate overflow-hidden rounded-[28px] bg-slate-950 px-6 py-8 text-white shadow-xl shadow-violet-950/10 sm:px-9 sm:py-10">
+          <div className="pointer-events-none absolute -right-14 -top-32 -z-10 h-80 w-80 rounded-full bg-violet-600/35 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-[-9rem] right-1/3 -z-10 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" />
 
-        <div className="absolute right-[-160px] top-[15%] h-[420px] w-[420px] rounded-full bg-fuchsia-200/30 blur-3xl" />
-
-        <div className="absolute bottom-[-180px] left-[35%] h-[380px] w-[380px] rounded-full bg-violet-100/50 blur-3xl" />
-      </div>
-
-      <main className="relative mx-auto max-w-5xl px-6 pb-20 pt-28 sm:pt-32 lg:px-8">
-        {/* BACK */}
-        
-
-        {/* HEADER */}
-        <div className="mt-8">
-         
-          <h1 className="mt-4 text-4xl font-black tracking-tight text-neutral-950 sm:text-5xl">
-            Pesanan{" "}
-            <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-violet-600 bg-clip-text text-transparent">
-              Saya
-            </span>
-          </h1>
-
-          <p className="mt-3 max-w-xl text-sm leading-6 text-neutral-500 sm:text-base">
-            Lihat semua pesanan tiket konser dan lanjutkan
-            pembayaran dengan mudah.
-          </p>
-        </div>
-
-        {/* LOADING */}
-        {loading && (
-          <div className="mt-10 space-y-5">
-            {[1, 2].map((item) => (
-              <div
-                key={item}
-                className="animate-pulse rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm"
-              >
-                <div className="h-4 w-24 rounded bg-neutral-200" />
-
-                <div className="mt-4 h-6 w-64 rounded bg-neutral-200" />
-
-                <div className="mt-6 h-4 w-full rounded bg-neutral-100" />
-
-                <div className="mt-3 h-4 w-2/3 rounded bg-neutral-100" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ERROR */}
-        {error && !loading && (
-          <div className="mt-10 rounded-3xl border border-red-200 bg-red-50 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-xl text-red-500">
-              !
+          <div className="flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                Hai{user?.name ? `, ${user.name.split(" ")[0]}` : ""}.
+                <span className="mt-1 block text-slate-300">
+                  Siap menikmati momen berikutnya?
+                </span>
+              </h1>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">
+                Pantau pembayaran dan temukan semua tiket konsermu dalam satu
+                tempat.
+              </p>
             </div>
-
-            <h2 className="mt-4 text-lg font-bold text-neutral-900">
-              Gagal mengambil pesanan
-            </h2>
-
-            <p className="mt-2 text-sm text-neutral-500">
-              {error}
-            </p>
-          </div>
-        )}
-
-        {/* EMPTY */}
-        {!loading && !error && orders.length === 0 && (
-          <div className="mt-10 rounded-3xl border border-neutral-200 bg-white p-10 text-center shadow-sm sm:p-14">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-2xl text-violet-600">
-              🎟
-            </div>
-
-            <h2 className="mt-5 text-xl font-bold text-neutral-900">
-              Belum ada order
-            </h2>
-
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-neutral-500">
-              Kamu belum memiliki pesanan tiket. Yuk cari
-              konser dan temukan event favoritmu.
-            </p>
 
             <Link
               to="/"
-              className="mt-6 inline-flex items-center justify-center rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700"
+              className="inline-flex w-fit shrink-0 items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-violet-100"
             >
-              Cari Konser →
+              Jelajahi konser <Compass size={17} />
             </Link>
           </div>
-        )}
 
-        {/* ORDERS */}
-        {!loading && !error && orders.length > 0 && (
-          <div className="mt-10 space-y-5">
-            {orders.map((order) => {
-              const isPaid =
-                order.payment_status === "paid";
-
-              const isPending =
-                order.payment_status === "pending";
-
-              const isUnpaid =
-                order.payment_status === "unpaid";
-
-              return (
-                <div
-                  key={order.id}
-                  className="group rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/50 sm:p-7"
-                >
-                  {/* TOP */}
-                  <div className="flex flex-col justify-between gap-5 sm:flex-row">
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-600">
-                        Order #{order.id}
-                      </p>
-
-                      <h2 className="mt-2 truncate text-xl font-black text-neutral-950 sm:text-2xl">
-                        {order.order_items?.[0]?.ticket_types
-                          ?.concerts?.title || "Concert"}
-                      </h2>
-                    </div>
-
-                    <div className="text-left sm:text-right">
-                      <p className="text-xs font-medium uppercase tracking-wider text-neutral-400">
-                        Total
-                      </p>
-
-                      <p className="mt-1 text-xl font-black text-violet-600">
-                        Rp{" "}
-                        {Number(
-                          order.total_price || 0
-                        ).toLocaleString("id-ID")}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* STATUS */}
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
-                      Order: {order.status}
-                    </span>
-
-                    <span
-                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                        isPaid
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-600"
-                          : isPending
-                          ? "border-yellow-200 bg-yellow-50 text-yellow-600"
-                          : "border-red-200 bg-red-50 text-red-600"
-                      }`}
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          isPaid
-                            ? "bg-emerald-500"
-                            : isPending
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
-                        }`}
-                      />
-
-                      Payment: {order.payment_status}
-                    </span>
-                  </div>
-
-                  {/* ITEMS */}
-                  <div className="mt-6 border-t border-neutral-200 pt-5">
-                    <p className="mb-3 text-xs font-bold uppercase tracking-wider text-neutral-400">
-                      Detail Tiket
-                    </p>
-
-                    <div className="space-y-3">
-                      {order.order_items?.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between gap-4 rounded-xl bg-neutral-50 px-4 py-3"
-                        >
-                          <span className="min-w-0 truncate text-sm text-neutral-600">
-                            {item.ticket_types?.name ||
-                              "Ticket"}{" "}
-                            × {item.quantity}
-                          </span>
-
-                          <span className="shrink-0 text-sm font-bold text-neutral-800">
-                            Rp{" "}
-                            {Number(
-                              item.subtotal || 0
-                            ).toLocaleString("id-ID")}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* ACTION */}
-                  <div className="mt-6 flex flex-col gap-3 border-t border-neutral-200 pt-5 sm:flex-row sm:justify-end">
-                   
-                    {/* BUTTON LANJUT PEMBAYARAN */}
-                    {!isPaid && (
-                      <Link
-                        to={`/orders/${order.id}`}
-                        className="inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700 hover:shadow-violet-300"
-                      >
-                        {isPending
-                          ? "Lihat Pembayaran →"
-                          : "Lanjut Pembayaran →"}
-                      </Link>
-                    )}
-
-                    {isPaid && (
-                      <Link
-                        to={`/orders/${order.id}`}
-                        className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-600"
-                      >
-                        Pembayaran Berhasil ✓
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* BOTTOM CTA */}
-        {!loading && !error && orders.length > 0 && (
-          <div className="mt-8 rounded-3xl border border-violet-100 bg-gradient-to-r from-violet-50 via-white to-fuchsia-50 p-6 sm:p-8">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-lg font-bold text-neutral-900">
-                  Mau cari konser lainnya?
-                </p>
-
-                <p className="mt-1 text-sm text-neutral-500">
-                  Temukan konser favoritmu dan pesan tiket
-                  sekarang.
-                </p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4 backdrop-blur">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Total pesanan</span>
+                <Ticket size={17} className="text-violet-300" />
               </div>
-
-              <Link
-                to="/"
-                className="inline-flex shrink-0 items-center justify-center rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:bg-violet-700"
-              >
-                Jelajahi Konser →
-              </Link>
+              <p className="mt-3 text-3xl font-bold">{counts.all}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4 backdrop-blur">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">
+                  Menunggu pembayaran
+                </span>
+                <Clock3 size={17} className="text-amber-300" />
+              </div>
+              <p className="mt-3 text-3xl font-bold">{counts.pending}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4 backdrop-blur">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Sudah dibayar</span>
+                <CheckCircle2 size={17} className="text-emerald-300" />
+              </div>
+              <p className="mt-3 text-3xl font-bold">{counts.paid}</p>
             </div>
           </div>
-        )}
-      </main>
-    </div>
+        </section>
+
+        <section className="mt-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                Pesanan saya
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Buka detail pesanan untuk melanjutkan pembayaran atau melihat
+                tiket.
+              </p>
+            </div>
+
+            {orders.length > 0 && (
+              <label className="relative block w-full sm:max-w-xs">
+                <Search
+                  size={17}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Cari konser atau nomor order"
+                  aria-label="Cari konser atau nomor order"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+                />
+              </label>
+            )}
+          </div>
+
+          {orders.length > 0 && (
+            <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+              {filters.map((filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setActiveFilter(filter.id)}
+                  aria-pressed={activeFilter === filter.id}
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                    activeFilter === filter.id
+                      ? "bg-violet-700 text-white shadow-md shadow-violet-200"
+                      : "border border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-700"
+                  }`}
+                >
+                  {filter.label}
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${
+                      activeFilter === filter.id
+                        ? "bg-white/15 text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {filter.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {loading && (
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {[1, 2].map((item) => (
+                <div
+                  key={item}
+                  className="animate-pulse rounded-2xl border border-slate-200 bg-white p-5"
+                >
+                  <div className="h-4 w-28 rounded bg-slate-200" />
+                  <div className="mt-4 h-6 w-2/3 rounded bg-slate-200" />
+                  <div className="mt-6 h-20 rounded-xl bg-slate-100" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && error && (
+            <div
+              role="alert"
+              className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800"
+            >
+              <p className="font-semibold">Pesanan belum dapat dimuat</p>
+              <p className="mt-1">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && orders.length === 0 && (
+            <div className="mt-5 rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+                <Ticket size={25} />
+              </span>
+              <h3 className="mt-5 text-xl font-bold text-slate-950">
+                Perjalanan konsermu dimulai di sini
+              </h3>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                Kamu belum punya pesanan. Jelajahi konser yang akan datang dan
+                simpan tempatmu.
+              </p>
+              <Link
+                to="/"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-violet-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-800"
+              >
+                Temukan konser <ArrowRight size={16} />
+              </Link>
+            </div>
+          )}
+
+          {!loading && !error && orders.length > 0 && (
+            <div className="mt-5">
+              {visibleOrders.length === 0 ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
+                  Tidak ada pesanan yang cocok. Coba ubah pencarian atau filter.
+                </div>
+              ) : (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {visibleOrders.map((order) => {
+                    const isPaid = order.payment_status === "paid";
+                    const isPending =
+                      order.payment_status === "pending" ||
+                      order.payment_status === "unpaid";
+                    const firstItem = order.order_items?.[0];
+                    const concert =
+                      firstItem?.ticket_types?.concerts;
+                    const ticketCount = Number(
+                      order.ticket_count ??
+                        order.order_items?.reduce(
+                          (total, item) =>
+                            total + Number(item.quantity || 0),
+                          0
+                        ) ??
+                        0
+                    );
+
+                    return (
+                      <article
+                        key={order.id}
+                        className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/60"
+                      >
+                        <div className="flex gap-4 p-5">
+                          {concert?.poster ? (
+                            <img
+                              src={concert.poster}
+                              alt={concert.title || "Poster konser"}
+                              className="h-28 w-20 shrink-0 rounded-xl object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-28 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-fuchsia-100 text-violet-700">
+                              <Ticket size={25} />
+                            </div>
+                          )}
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                Order #{order.id}
+                              </p>
+                              <span
+                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                  isPaid
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : isPending
+                                      ? "bg-amber-50 text-amber-800"
+                                      : "bg-slate-100 text-slate-600"
+                                }`}
+                              >
+                                {isPaid ? (
+                                  <CheckCircle2 size={13} />
+                                ) : (
+                                  <Clock3 size={13} />
+                                )}
+                                {getPaymentLabel(order.payment_status)}
+                              </span>
+                            </div>
+
+                            <h3 className="mt-2 line-clamp-2 text-lg font-bold leading-snug text-slate-950">
+                              {concert?.title || "Pesanan tiket konser"}
+                            </h3>
+
+                            <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
+                              <CalendarDays size={14} />
+                              {concert?.concert_date
+                                ? formatDate(
+                                    `${concert.concert_date}T00:00:00`
+                                  )
+                                : `Dipesan ${formatDate(order.created_at)}`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4">
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                              {isPaid
+                                ? `${ticketCount} tiket`
+                                : `Dipesan ${formatDate(order.created_at)}`}
+                            </p>
+                            <p className="mt-1 font-bold text-slate-950">
+                              Rp {formatCurrency(order.total_price)}
+                            </p>
+                          </div>
+                          <Link
+                            to={`/orders/${order.id}`}
+                            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                              isPaid
+                                ? "border border-slate-200 bg-white text-slate-700 hover:border-violet-200 hover:text-violet-700"
+                                : "bg-violet-700 text-white hover:bg-violet-800"
+                            }`}
+                          >
+                            {isPaid ? "Lihat tiket" : "Lihat pembayaran"}
+                            <ArrowRight size={15} />
+                          </Link>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
 

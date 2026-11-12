@@ -2,11 +2,26 @@ const express = require("express");
 const router = express.Router();
 
 const supabase = require("../config/supabase");
+const { getMidtransConfig } = require("../config/midtrans");
 
 const {
   verifyToken,
   checkRole,
 } = require("../middleware/authMiddleware");
+
+const hideUnpaidTicketDetails = (order) => {
+  const orderItems = order.order_items || [];
+
+  return {
+    ...order,
+    ticket_count: orderItems.reduce(
+      (total, item) => total + Number(item.quantity || 0),
+      0
+    ),
+    order_items:
+      order.payment_status === "paid" ? orderItems : [],
+  };
+};
 
 // =====================================================
 // POST /api/orders
@@ -18,12 +33,35 @@ router.post(
   checkRole("user"),
   async (req, res) => {
     try {
-      const user_id = req.user.id;
-      const { items } = req.body;
+      if (!getMidtransConfig().isConfigured) {
+        return res.status(503).json({
+          success: false,
+          message: "Checkout belum tersedia sampai Midtrans dikonfigurasi.",
+        });
+      }
 
-      // ===============================
-      // VALIDASI ITEMS
-      // ===============================
+      const { items } = req.body;
+      const customerName =
+        typeof req.body.customer_name === "string"
+          ? req.body.customer_name.trim().replace(/\s+/g, " ")
+          : "";
+      const customerEmail =
+        typeof req.body.customer_email === "string"
+          ? req.body.customer_email.trim().toLowerCase()
+          : "";
+
+      if (
+        customerName.length < 3 ||
+        customerName.length > 120 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) ||
+        customerEmail.length > 254
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Nama lengkap dan alamat email yang valid wajib diisi.",
+        });
+      }
+
       if (
         !items ||
         !Array.isArray(items) ||
@@ -35,127 +73,59 @@ router.post(
         });
       }
 
-      let total_price = 0;
-      const orderItems = [];
+      const normalizedItems = items.map((item) => ({
+        ticket_type_id: Number(item.ticket_type_id),
+        quantity: Number(item.quantity),
+      }));
 
-      // ===============================
-      // CEK SETIAP TIKET
-      // ===============================
-      for (const item of items) {
-        const { ticket_type_id, quantity } = item;
-
-        if (
-          !ticket_type_id ||
-          !quantity ||
-          Number(quantity) <= 0
-        ) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "ticket_type_id dan quantity wajib diisi",
-          });
-        }
-
-        const {
-          data: ticket,
-          error: ticketError,
-        } = await supabase
-          .from("ticket_types")
-          .select("*")
-          .eq("id", ticket_type_id)
-          .single();
-
-        if (ticketError || !ticket) {
-          return res.status(404).json({
-            success: false,
-            message: `Ticket type ${ticket_type_id} tidak ditemukan`,
-          });
-        }
-
-        // ===============================
-        // CEK STOK TERSEDIA
-        // ===============================
-        const availableStock =
-          Number(ticket.stock) - Number(ticket.sold);
-
-        if (availableStock < Number(quantity)) {
-          return res.status(400).json({
-            success: false,
-            message: `Stok tiket ${ticket.name} tidak mencukupi`,
-          });
-        }
-
-        const subtotal =
-          Number(ticket.price) * Number(quantity);
-
-        total_price += subtotal;
-
-        orderItems.push({
-          ticket_type_id: Number(ticket_type_id),
-          quantity: Number(quantity),
-          price: Number(ticket.price),
-          subtotal,
+      if (
+        normalizedItems.some(
+          (item) =>
+            !Number.isSafeInteger(item.ticket_type_id) ||
+            item.ticket_type_id <= 0 ||
+            !Number.isSafeInteger(item.quantity) ||
+            item.quantity <= 0
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Item tiket tidak valid.",
         });
       }
 
-      // ===============================
-      // BUAT ORDER
-      // ===============================
-      const {
-        data: order,
-        error: orderError,
-      } = await supabase
+      const { data, error } = await supabase.rpc(
+        "create_order_with_reservations",
+        {
+          p_user_id: Number(req.user.id),
+          p_items: normalizedItems,
+        }
+      );
+
+      if (error) {
+        if (error.code === "P0001") {
+          return res.status(400).json({
+            success: false,
+            message: error.message,
+          });
+        }
+        throw error;
+      }
+
+      const { error: customerError } = await supabase
         .from("orders")
-        .insert({
-          user_id,
-          total_price,
-          status: "pending",
-          payment_status: "unpaid",
+        .update({
+          customer_name: customerName,
+          customer_email: customerEmail,
         })
-        .select()
-        .single();
+        .eq("id", data.order.id)
+        .eq("user_id", Number(req.user.id));
 
-      if (orderError) {
-        throw orderError;
-      }
-
-      // ===============================
-      // BUAT ORDER ITEMS
-      // ===============================
-      const itemsToInsert = orderItems.map((item) => ({
-        order_id: order.id,
-        ticket_type_id: item.ticket_type_id,
-        quantity: item.quantity,
-        price: item.price,
-        subtotal: item.subtotal,
-      }));
-
-      const {
-        data: insertedItems,
-        error: itemError,
-      } = await supabase
-        .from("order_items")
-        .insert(itemsToInsert)
-        .select();
-
-      if (itemError) {
-        throw itemError;
-      }
-
-      // =================================================
-      // SOLD TIDAK DIUPDATE DI SINI
-      //
-      // sold baru bertambah ketika admin
-      // melakukan verifikasi payment.
-      // =================================================
+      if (customerError) throw customerError;
 
       res.status(201).json({
         success: true,
         message: "Order berhasil dibuat",
-        data: {
-          order,
-          items: insertedItems,
-        },
+        data,
       });
     } catch (err) {
       console.error("ORDER ERROR:", err);
@@ -188,6 +158,8 @@ router.get(
         .select(`
           id,
           user_id,
+          customer_name,
+          customer_email,
           total_price,
           status,
           payment_status,
@@ -226,7 +198,6 @@ router.get(
           payments (
             id,
             payment_method,
-            payment_proof,
             payment_date,
             status
           )
@@ -244,7 +215,7 @@ router.get(
         success: true,
         message: "Data order berhasil diambil",
         total: data.length,
-        data,
+        data: data.map(hideUnpaidTicketDetails),
       });
     } catch (err) {
       console.error("GET USER ORDERS ERROR:", err);
@@ -275,6 +246,8 @@ router.get(
         .select(`
           id,
           user_id,
+          customer_name,
+          customer_email,
           total_price,
           status,
           payment_status,
@@ -319,7 +292,6 @@ router.get(
           payments (
             id,
             payment_method,
-            payment_proof,
             payment_date,
             status
           )
@@ -463,6 +435,8 @@ router.get(
         .select(`
           id,
           user_id,
+          customer_name,
+          customer_email,
           total_price,
           status,
           payment_status,
@@ -501,7 +475,6 @@ router.get(
           payments (
             id,
             payment_method,
-            payment_proof,
             payment_date,
             status
           )
@@ -517,10 +490,48 @@ router.get(
         });
       }
 
+      let tickets = [];
+      if (data.payment_status === "paid") {
+        const { data: issuedTickets, error: ticketsError } = await supabase
+          .from("concert_tickets")
+          .select(`
+            id,
+            order_id,
+            order_item_id,
+            attendee_number,
+            ticket_code,
+            checked_in_at,
+            order_items (
+              ticket_types (
+                name,
+                concerts (
+                  title,
+                  poster,
+                  concert_date,
+                  concert_time,
+                  venues (
+                    name,
+                    city,
+                    address
+                  )
+                )
+              )
+            )
+          `)
+          .eq("order_id", order_id)
+          .order("id", { ascending: true });
+
+        if (ticketsError) throw ticketsError;
+        tickets = issuedTickets;
+      }
+
       res.json({
         success: true,
         message: "Detail order berhasil diambil",
-        data,
+        data: {
+          ...hideUnpaidTicketDetails(data),
+          tickets,
+        },
       });
     } catch (err) {
       console.error(

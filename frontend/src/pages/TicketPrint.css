@@ -1,0 +1,40 @@
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .ticket-print-area,
+  .ticket-print-area * {
+    visibility: visible !important;
+  }
+
+  .ticket-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+
+  .ticket-print-controls {
+    display: none !important;
+  }
+
+  .issued-ticket {
+    break-inside: avoid;
+    box-shadow: none !important;
+    margin-bottom: 12mm;
+  }
+
+  .ticket-qr-image {
+    width: 44mm !important;
+    height: 44mm !important;
+  }
+}
+
+.ticket-qr-image {
+  width: 180px;
+  height: 180px;
+}

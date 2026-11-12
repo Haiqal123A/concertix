@@ -3,6 +3,21 @@
   background: #f8fafc;
   color: #0f172a;
   color-scheme: light;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.admin-brand-wordmark {
+  font-family: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
+  letter-spacing: -0.07em;
+}
+
+.admin-nav-scroller {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-nav-scroller::-webkit-scrollbar {
+  display: none;
 }
 
 .admin-shell main [class~="bg-[#080808]"],
@@ -46,10 +61,4 @@
 .admin-shell main [class~="hover:bg-white/10"]:hover,
 .admin-shell main [class~="hover:bg-white/[0.02]"]:hover {
   background-color: #f1f5f9 !important;
-}
-
-@media (max-width: 1023px) {
-  .admin-shell main {
-    min-height: calc(100vh - 68px);
-  }
 }
