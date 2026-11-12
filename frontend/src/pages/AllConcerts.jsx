@@ -71,11 +71,11 @@ function ConcertCard({ concert, isFinished }) {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-transparent" />
-        <span className="absolute left-2 top-2 rounded-full border border-white/30 bg-slate-950/45 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-md sm:left-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-[10px]">
+        <span className="absolute left-2 top-2 rounded-full border border-white/30 bg-slate-950/45 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white backdrop-blur-md sm:left-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-[10px]">
           {statusLabels[status] || "Akan datang"}
         </span>
         {category && (
-          <span className="absolute bottom-2 left-2 rounded-full border border-white/20 bg-white/15 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-md sm:bottom-4 sm:left-4 sm:px-3 sm:py-1.5 sm:text-xs">
+          <span className="absolute bottom-2 left-2 rounded-full border border-white/20 bg-white/15 px-1.5 py-0.5 text-[9px] font-semibold text-white backdrop-blur-md sm:bottom-4 sm:left-4 sm:px-3 sm:py-1.5 sm:text-xs">
             {category}
           </span>
         )}

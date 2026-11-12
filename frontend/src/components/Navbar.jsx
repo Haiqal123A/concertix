@@ -106,17 +106,17 @@ function Navbar() {
       {/* Glow */}
       <div className="pointer-events-none absolute left-1/2 top-0 h-32 w-[500px] -translate-x-1/2 bg-violet-400/10 blur-[90px]" />
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-3 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-3 pt-3 sm:px-6 lg:px-8">
 
         <nav
           className="
             rounded-2xl
             border border-slate-200/80
             bg-white/90
-            px-4 py-3
-            shadow-[0_12px_38px_rgba(15,23,42,0.06)]
+            px-3 py-2.5
+            shadow-[0_8px_28px_rgba(15,23,42,0.06)]
             backdrop-blur-2xl
-            sm:px-5
+            sm:px-5 sm:py-3
           "
         >
 
@@ -133,16 +133,16 @@ function Navbar() {
             <Link
               to="/"
               onClick={closeMobile}
-              className="group flex items-center gap-3"
+              className="group flex items-center gap-2.5 sm:gap-3"
             >
 
               <div
                 className="
-                  relative flex h-10 w-10
+                  relative flex h-9 w-9 sm:h-10 sm:w-10
                   items-center justify-center
-                  overflow-hidden rounded-[14px]
+                  overflow-hidden rounded-xl sm:rounded-[14px]
                   bg-violet-700
-                  text-sm font-black text-white
+                  text-[13px] font-black text-white sm:text-sm
                   shadow-[0_8px_25px_rgba(15,23,42,0.18)]
                   transition-all duration-300
                   group-hover:-rotate-3
@@ -167,7 +167,7 @@ function Navbar() {
 
               <div className="leading-none">
 
-                <p className="text-[15px] font-black tracking-tight text-slate-950">
+                <p className="text-sm font-black tracking-tight text-slate-950 sm:text-[15px]">
                   CONCERT
                   <span className="text-violet-600">
                     IX

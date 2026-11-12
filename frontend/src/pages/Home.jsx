@@ -492,14 +492,14 @@ function Home() {
           </div>
 
           {loading && (
-            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-7 grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
               {[1, 2, 3].map((item) => (
                 <div
                   key={item}
-                  className="animate-pulse overflow-hidden rounded-2xl border border-white/10 bg-white/[0.07]"
+                  className="animate-pulse overflow-hidden rounded-xl border border-white/10 bg-white/[0.07] sm:rounded-2xl"
                 >
-                  <div className="aspect-[16/9] bg-white/10" />
-                  <div className="space-y-3 p-4">
+                  <div className="aspect-square bg-white/10 sm:aspect-[16/9]" />
+                  <div className="space-y-2 p-2 sm:space-y-3 sm:p-4">
                     <div className="h-4 w-3/4 rounded bg-white/10" />
                     <div className="h-3 w-1/2 rounded bg-white/10" />
                   </div>
@@ -509,7 +509,7 @@ function Home() {
           )}
 
           {!loading && !error && activeConcerts.length > 0 && (
-            <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-7 grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
               {activeConcerts.map((concert) => {
                 const venue =
                   concert.venue_address ||
@@ -520,9 +520,9 @@ function Home() {
                   <Link
                     key={concert.id}
                     to={`/concert/${concert.id}`}
-                    className="group min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.07] transition hover:-translate-y-1 hover:border-white/25 hover:bg-white/10"
+                    className="group min-w-0 overflow-hidden rounded-xl border border-white/10 bg-white/[0.07] transition hover:-translate-y-1 hover:border-white/25 hover:bg-white/10 sm:rounded-2xl"
                   >
-                    <div className="relative aspect-[16/9] overflow-hidden bg-slate-800">
+                    <div className="relative aspect-square overflow-hidden bg-slate-800 sm:aspect-[16/9]">
                       {concert.poster ? (
                         <img
                           src={concert.poster}
@@ -534,28 +534,33 @@ function Home() {
                           <Ticket size={30} strokeWidth={1.6} />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent" />
-                      <span className="absolute left-3 top-3 rounded-full border border-white/20 bg-slate-950/55 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/20 via-transparent to-transparent sm:from-slate-950/75" />
+                      <span className="absolute left-3 top-3 hidden rounded-full border border-white/20 bg-slate-950/55 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur sm:inline-flex">
                         {concert.status === "ongoing"
                           ? "Berlangsung"
                           : "Akan datang"}
                       </span>
                     </div>
 
-                    <div className="p-4">
-                      <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-white">
+                    <div className="p-2 sm:p-4">
+                      <span className="mb-1 inline-flex rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-semibold text-slate-200 sm:hidden">
+                        {concert.status === "ongoing"
+                          ? "Berlangsung"
+                          : "Akan datang"}
+                      </span>
+                      <h3 className="line-clamp-2 min-h-8 text-[11px] font-bold leading-4 text-white sm:min-h-10 sm:text-sm sm:leading-5">
                         {concert.title}
                       </h3>
-                      <p className="mt-1 truncate text-xs text-slate-300">
+                      <p className="mt-1 truncate text-[10px] text-slate-300 sm:text-xs">
                         {concert.artist_names ||
                           concert.artists?.name ||
                           "Artis belum diisi"}
                       </p>
-                      <div className="mt-3 space-y-2 border-t border-white/10 pt-3 text-xs text-slate-300">
+                      <div className="mt-2 space-y-1.5 border-t border-white/10 pt-2 text-[10px] text-slate-300 sm:mt-3 sm:space-y-2 sm:pt-3 sm:text-xs">
                         <p className="flex items-center gap-2">
                           <CalendarDays
                             size={14}
-                            className="shrink-0 text-slate-400"
+                            className="h-3 w-3 shrink-0 text-slate-400 sm:h-3.5 sm:w-3.5"
                           />
                           {formatConcertDate(concert.concert_date)}
                         </p>
@@ -563,7 +568,7 @@ function Home() {
                           <p className="flex min-w-0 items-center gap-2">
                             <MapPin
                               size={14}
-                              className="shrink-0 text-slate-400"
+                              className="h-3 w-3 shrink-0 text-slate-400 sm:h-3.5 sm:w-3.5"
                             />
                             <span className="truncate">{venue}</span>
                           </p>
