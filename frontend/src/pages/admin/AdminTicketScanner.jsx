@@ -20,6 +20,7 @@ function AdminTicketScanner({ canManageStaff = false }) {
   const staffManagementRef = useRef(null);
   const controlsRef = useRef(null);
   const submittingRef = useRef(false);
+  const audioContextRef = useRef(null);
   const [scanning, setScanning] = useState(false);
   const [mirrorPreview, setMirrorPreview] = useState(false);
   const [result, setResult] = useState(null);
@@ -160,9 +161,47 @@ function AdminTicketScanner({ canManageStaff = false }) {
     setScanning(false);
   };
 
+  const playScanSound = (accepted) => {
+    const audioContext = audioContextRef.current;
+    if (!audioContext) return;
+
+    const playTone = () => {
+      const startAt = audioContext.currentTime;
+      const duration = accepted ? 0.12 : 0.65;
+      const oscillator = audioContext.createOscillator();
+      const volume = audioContext.createGain();
+
+      oscillator.type = accepted ? "sine" : "square";
+      oscillator.frequency.setValueAtTime(accepted ? 880 : 220, startAt);
+      volume.gain.setValueAtTime(0.0001, startAt);
+      volume.gain.exponentialRampToValueAtTime(0.16, startAt + 0.01);
+      volume.gain.exponentialRampToValueAtTime(
+        0.0001,
+        startAt + duration
+      );
+      oscillator.connect(volume);
+      volume.connect(audioContext.destination);
+      oscillator.start(startAt);
+      oscillator.stop(startAt + duration);
+    };
+
+    if (audioContext.state === "suspended") {
+      audioContext.resume().then(playTone).catch((audioError) => {
+        console.error("PLAY TICKET SCAN SOUND ERROR:", audioError);
+      });
+    } else if (audioContext.state === "running") {
+      playTone();
+    }
+  };
+
   useEffect(
     () => () => {
       controlsRef.current?.stop();
+      if (audioContextRef.current?.state !== "closed") {
+        audioContextRef.current?.close().catch((audioError) => {
+          console.error("CLOSE TICKET SCAN AUDIO ERROR:", audioError);
+        });
+      }
     },
     []
   );
@@ -203,13 +242,25 @@ function AdminTicketScanner({ canManageStaff = false }) {
     setScanning(true);
 
     try {
+      if (!audioContextRef.current && window.AudioContext) {
+        audioContextRef.current = new window.AudioContext();
+        audioContextRef.current.resume().catch((audioError) => {
+          console.error("ENABLE TICKET SCAN SOUND ERROR:", audioError);
+        });
+      }
+
       const { BrowserQRCodeReader } = await import("@zxing/browser");
-      const reader = new BrowserQRCodeReader();
+      const reader = new BrowserQRCodeReader(undefined, {
+        delayBetweenScanAttempts: 100,
+        delayBetweenScanSuccess: 100,
+      });
       const controls = await reader.decodeFromConstraints(
         {
           audio: false,
           video: {
             facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
           },
         },
         videoRef.current,
@@ -230,6 +281,7 @@ function AdminTicketScanner({ canManageStaff = false }) {
               message: response.data.message,
               ticket: response.data.data.ticket,
             });
+            playScanSound(true);
           } catch (requestError) {
             const state =
               requestError.response?.data?.data?.state ||
@@ -245,6 +297,7 @@ function AdminTicketScanner({ canManageStaff = false }) {
                 requestError.response?.data?.message ||
                 "Tidak dapat menghubungi server validasi tiket.",
             });
+            playScanSound(false);
           } finally {
             submittingRef.current = false;
           }
@@ -679,8 +732,7 @@ function AdminTicketScanner({ canManageStaff = false }) {
           <button
             type="button"
             onClick={() => {
-              setResult(null);
-              setError("");
+               void startScanner();
             }}
             className="mt-4 inline-flex items-center gap-2 rounded-lg border border-current/20 px-3 py-2 text-sm font-semibold"
           >

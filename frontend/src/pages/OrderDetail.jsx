@@ -16,6 +16,11 @@ import "./TicketPrint.css";
 const formatCurrency = (value) =>
   Number(value || 0).toLocaleString("id-ID");
 
+const getTicketPosterUrl = (poster) =>
+  `${api.defaults.baseURL}/tickets/poster-image?url=${encodeURIComponent(
+    poster
+  )}`;
+
 const getConcertOrderNumber = (order, concertId) =>
   order.concert_order_numbers?.find(
     (item) => Number(item.concert_id) === Number(concertId)
@@ -190,14 +195,12 @@ export default function OrderDetail() {
     setDownloadError("");
 
     try {
+      const ticketImages = Array.from(ticketElement.querySelectorAll("img"));
+      await Promise.all(ticketImages.map((image) => image.decode()));
+
       const imageBlob = await toBlob(ticketElement, {
         backgroundColor: "#ffffff",
         pixelRatio: 2,
-        filter: (node) =>
-          !(
-            node.nodeType === Node.ELEMENT_NODE &&
-            node.hasAttribute("data-ticket-poster")
-          ),
       });
 
       if (!imageBlob) {
@@ -398,8 +401,8 @@ export default function OrderDetail() {
                               >
                                 <Download size={16} />
                                 {downloadingTicketId === issuedTicket.id
-                                  ? "Menyiapkan gambar..."
-                                  : "Unduh gambar"}
+                                  ? "Menyiapkan tiket..."
+                                  : "Unduh tiket"}
                               </button>
                             </div>
                             <article
@@ -415,44 +418,45 @@ export default function OrderDetail() {
                                   );
                                 }
                               }}
-                              className="issued-ticket mx-auto w-[94%] max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                              className="issued-ticket mx-auto w-[94%] max-w-lg overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-lg shadow-slate-900/5"
                             >
-                              <div className="flex min-h-32">
+                              <div className="flex min-h-[190px]">
                                 {concert?.poster && (
                                   <img
-                                    src={concert.poster}
+                                    src={getTicketPosterUrl(concert.poster)}
                                     alt={concert.title || "Konser"}
-                                    className="hidden w-28 object-cover sm:block"
+                                    crossOrigin="anonymous"
+                                    className="ticket-poster w-[88px] shrink-0 object-cover sm:w-32"
                                     data-ticket-poster=""
                                   />
                                 )}
-                                <div className="min-w-0 flex-1 p-3.5 sm:p-4">
-                                  <p className="text-[10px] font-bold uppercase tracking-wider text-violet-700 sm:text-xs">
-                                    Concertix · Tiket masuk
+                                <div className="flex min-w-0 flex-1 flex-col justify-center p-3.5 sm:p-5">
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-violet-700 sm:text-xs">
+                                    Concertix <span className="text-slate-300">/</span> E-ticket
                                   </p>
-                                  <h3 className="mt-1.5 text-base font-bold leading-snug text-slate-950 sm:text-lg">
+                                  <h3 className="mt-2 text-base font-bold leading-snug text-slate-950 sm:text-xl">
                                     {concert?.title || "Tiket konser"}
                                   </h3>
                                   {concert?.artist_names && (
-                                    <p className="mt-1 text-xs text-slate-600 sm:text-sm">
+                                    <p className="mt-1 text-xs text-slate-500 sm:text-sm">
                                       {concert.artist_names}
                                     </p>
                                   )}
-                                  <p className="mt-1 text-xs text-violet-700 sm:text-sm">
+                                  <p className="mt-2 inline-flex w-fit rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-semibold text-violet-700 sm:text-xs">
                                     {ticketType?.name || "Tiket"} · Pengunjung{" "}
                                     {issuedTicket.attendee_number}
                                   </p>
                                   {order.customer_name && (
-                                    <p className="mt-1.5 text-xs text-slate-700 sm:mt-2 sm:text-sm">
-                                      Nama: {order.customer_name}
+                                    <p className="mt-3 truncate text-xs font-medium text-slate-800 sm:text-sm">
+                                      {order.customer_name}
                                     </p>
                                   )}
                                   {order.customer_email && (
-                                    <p className="mt-0.5 break-all text-xs text-slate-600 sm:mt-1 sm:text-sm">
-                                      Email: {order.customer_email}
+                                    <p className="mt-0.5 break-all text-[10px] text-slate-500 sm:text-xs">
+                                      {order.customer_email}
                                     </p>
                                   )}
-                                  <p className="mt-2 text-xs leading-5 text-slate-600 sm:mt-3 sm:text-sm">
+                                  <p className="mt-3 text-xs leading-5 text-slate-600 sm:text-sm">
                                     {concert?.concert_date
                                       ? new Date(
                                           `${concert.concert_date}T00:00:00`
@@ -468,15 +472,18 @@ export default function OrderDetail() {
                                       : ""}
                                   </p>
                                   {venueAddress && (
-                                    <p className="mt-0.5 text-xs leading-5 text-slate-600 sm:mt-1 sm:text-sm">
+                                    <p className="mt-0.5 text-xs leading-5 text-slate-500 sm:text-sm">
                                       {venueAddress}
                                     </p>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex flex-col items-center gap-2 border-t border-dashed border-slate-300 bg-slate-50 p-3.5 sm:p-4">
+                              <div className="flex flex-col items-center gap-2 border-t border-dashed border-slate-300 bg-slate-50 px-4 py-4 sm:py-5">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                                  Tunjukkan QR saat masuk
+                                </p>
                                 <TicketQr value={issuedTicket.ticket_code} />
-                                <p className="break-all text-center font-mono text-[10px] text-slate-500 sm:text-xs">
+                                <p className="break-all text-center font-mono text-[10px] tracking-wide text-slate-500 sm:text-xs">
                                   {issuedTicket.ticket_code}
                                 </p>
                                 <p
@@ -489,9 +496,9 @@ export default function OrderDetail() {
                                   {issuedTicket.checked_in_at
                                     ? "Sudah digunakan"
                                     : concertOrderNumber
-                                      ? `No. pemesanan ${String(
+                                      ? `Pesanan ${String(
                                           concertOrderNumber.order_number
-                                        ).padStart(2, "0")} · Tunjukkan QR ini di pintu masuk`
+                                        ).padStart(2, "0")}`
                                       : `Order #${order.id} · Tunjukkan QR ini di pintu masuk`}
                                 </p>
                               </div>

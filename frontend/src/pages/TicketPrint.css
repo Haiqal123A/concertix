@@ -30,9 +30,26 @@
     margin-bottom: 12mm;
   }
 
+  .ticket-poster {
+    width: 32mm !important;
+    min-height: 50mm !important;
+    object-fit: cover !important;
+  }
+
   .ticket-qr-image {
     width: 44mm !important;
     height: 44mm !important;
+  }
+}
+
+.ticket-poster {
+  min-height: 190px;
+  object-position: center;
+}
+
+@media (max-width: 420px) {
+  .ticket-poster {
+    min-height: 180px;
   }
 }
 
