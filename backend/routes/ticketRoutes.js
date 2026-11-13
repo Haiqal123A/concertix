@@ -4,6 +4,61 @@ const router = express.Router();
 const supabase = require("../config/supabase");
 const { verifyToken, checkRole } = require("../middleware/authMiddleware");
 
+const maxPosterBytes = 5 * 1024 * 1024;
+const allowedPosterHosts = new Set([
+  "statik.tempo.co",
+  "i.pinimg.com",
+  new URL(process.env.SUPABASE_URL).hostname,
+]);
+const allowedPosterTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+const getAllowedPosterUrl = (value) => {
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== "https:" ||
+      url.port ||
+      url.username ||
+      url.password ||
+      !allowedPosterHosts.has(url.hostname.toLowerCase())
+    ) {
+      return null;
+    }
+
+    return url;
+  } catch {
+    return null;
+  }
+};
+
+const fetchPoster = async (url) => {
+  let currentUrl = url;
+
+  for (let redirects = 0; redirects <= 3; redirects += 1) {
+    const response = await fetch(currentUrl, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (response.status < 300 || response.status >= 400) {
+      return response;
+    }
+
+    const location = response.headers.get("location");
+    const redirectedUrl = location
+      ? getAllowedPosterUrl(new URL(location, currentUrl).href)
+      : null;
+
+    if (!redirectedUrl) {
+      throw new Error("Poster redirect is not allowed.");
+    }
+
+    currentUrl = redirectedUrl;
+  }
+
+  throw new Error("Poster has too many redirects.");
+};
+
 const requireActiveStaff = async (req, res, next) => {
   if (req.user.role !== "petugas") return next();
 
@@ -33,6 +88,79 @@ const requireActiveStaff = async (req, res, next) => {
     });
   }
 };
+
+router.get("/poster-image", async (req, res) => {
+  const posterUrl = getAllowedPosterUrl(req.query.url);
+  if (!posterUrl) {
+    return res.status(400).json({
+      success: false,
+      message: "URL poster tidak didukung.",
+    });
+  }
+
+  try {
+    const response = await fetchPoster(posterUrl);
+    if (!response.ok) {
+      return res.status(502).json({
+        success: false,
+        message: "Poster konser tidak dapat dimuat.",
+      });
+    }
+
+    const contentType = response.headers
+      .get("content-type")
+      ?.split(";")[0]
+      .toLowerCase();
+    if (!allowedPosterTypes.has(contentType)) {
+      return res.status(415).json({
+        success: false,
+        message: "Format poster tidak didukung.",
+      });
+    }
+
+    const contentLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > maxPosterBytes) {
+      return res.status(413).json({
+        success: false,
+        message: "Ukuran poster melebihi batas.",
+      });
+    }
+
+    const chunks = [];
+    let totalBytes = 0;
+    for await (const chunk of response.body) {
+      totalBytes += chunk.length;
+      if (totalBytes > maxPosterBytes) {
+        return res.status(413).json({
+          success: false,
+          message: "Ukuran poster melebihi batas.",
+        });
+      }
+      chunks.push(chunk);
+    }
+
+    if (totalBytes === 0) {
+      return res.status(502).json({
+        success: false,
+        message: "Poster konser tidak dapat dimuat.",
+      });
+    }
+
+    res.set({
+      "Cache-Control": "public, max-age=3600",
+      "Content-Length": String(totalBytes),
+      "Content-Type": contentType,
+      "X-Content-Type-Options": "nosniff",
+    });
+    return res.send(Buffer.concat(chunks));
+  } catch (err) {
+    console.error("TICKET POSTER PROXY ERROR:", err);
+    return res.status(502).json({
+      success: false,
+      message: "Gagal memuat poster tiket.",
+    });
+  }
+});
 
 router.post(
   "/scan",
