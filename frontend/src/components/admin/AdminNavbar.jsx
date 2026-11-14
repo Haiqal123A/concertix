@@ -82,10 +82,11 @@ function AdminNavbar() {
               aria-label="Concertix admin dashboard"
               className="group flex shrink-0 items-center gap-3"
             >
-              <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-[14px] bg-violet-700 text-sm font-black text-white shadow-[0_8px_25px_rgba(15,23,42,0.18)] transition duration-300 group-hover:-rotate-3 group-hover:scale-105 group-hover:bg-slate-950">
-                <span className="relative z-10">C</span>
-                <span className="absolute -right-3 -top-3 h-8 w-8 rounded-full bg-violet-500/40 blur-md" />
-              </span>
+              <img
+                src="/concertix-mark.svg"
+                alt=""
+                className="h-10 w-10 object-contain transition-transform duration-300 group-hover:scale-105"
+              />
               <span className="text-[15px] font-black tracking-tight text-slate-950">
                 CONCERT<span className="text-violet-600">IX</span>
               </span>

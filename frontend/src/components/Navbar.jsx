@@ -133,49 +133,17 @@ function Navbar() {
             <Link
               to="/"
               onClick={closeMobile}
+              aria-label="Concertix beranda"
               className="group flex items-center gap-2.5 sm:gap-3"
             >
-
-              <div
-                className="
-                  relative flex h-9 w-9 sm:h-10 sm:w-10
-                  items-center justify-center
-                  overflow-hidden rounded-xl sm:rounded-[14px]
-                  bg-violet-700
-                  text-[13px] font-black text-white sm:text-sm
-                  shadow-[0_8px_25px_rgba(15,23,42,0.18)]
-                  transition-all duration-300
-                  group-hover:-rotate-3
-                  group-hover:scale-105
-                  group-hover:bg-slate-950
-                "
-              >
-                <span className="relative z-10">
-                  C
-                </span>
-
-                <div
-                  className="
-                    absolute -right-3 -top-3
-                    h-8 w-8
-                    rounded-full
-                    bg-violet-500/40
-                    blur-md
-                  "
-                />
-              </div>
-
-              <div className="leading-none">
-
-                <p className="text-sm font-black tracking-tight text-slate-950 sm:text-[15px]">
-                  CONCERT
-                  <span className="text-violet-600">
-                    IX
-                  </span>
-                </p>
-
-              </div>
-
+              <img
+                src="/concertix-mark.svg"
+                alt=""
+                className="h-9 w-9 object-contain transition-transform duration-300 group-hover:scale-105 sm:h-10 sm:w-10"
+              />
+              <span className="text-sm font-black tracking-tight text-slate-950 sm:text-[15px]">
+                CONCERT<span className="text-violet-600">IX</span>
+              </span>
             </Link>
 
             {/* =================================================
