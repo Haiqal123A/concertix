@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -8,6 +9,9 @@ import {
   RefreshCw,
   Ticket,
   XCircle,
+  CalendarDays,
+  MapPin,
+  CreditCard,
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -20,18 +24,24 @@ const concertStatusLabels = {
 };
 
 const concertStatusStyles = {
-  upcoming: "bg-violet-50 text-violet-700",
+  upcoming: "bg-sky-50 text-sky-700",
   ongoing: "bg-emerald-50 text-emerald-700",
   sold_out: "bg-amber-50 text-amber-700",
   finished: "bg-slate-100 text-slate-600",
   cancelled: "bg-rose-50 text-rose-700",
 };
 
+const formatNumber = (value) =>
+  Number(value || 0).toLocaleString("id-ID");
+
 const formatConcertDate = (date) => {
   if (!date) return "Tanggal belum ditentukan";
 
   const parsedDate = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsedDate.getTime())) return "Tanggal belum ditentukan";
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Tanggal belum ditentukan";
+  }
 
   return parsedDate.toLocaleDateString("id-ID", {
     day: "numeric",
@@ -49,26 +59,33 @@ function AdminDashboard() {
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // AMBIL DATA DASHBOARD
+
   useEffect(() => {
     const getDashboardData = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const [concertResponse, ticketResponse, paymentResponse] =
-          await Promise.all([
-            api.get("/concerts"),
-            api.get("/ticket-types"),
-            api.get("/payments/admin"),
-          ]);
+        const [
+          concertResponse,
+          ticketResponse,
+          paymentResponse,
+        ] = await Promise.all([
+          api.get("/concerts"),
+          api.get("/ticket-types"),
+          api.get("/payments/admin"),
+        ]);
 
         setConcerts(concertResponse.data.data || []);
         setTickets(ticketResponse.data.data || []);
         setPayments(paymentResponse.data.data || []);
       } catch (err) {
         console.error("ADMIN DASHBOARD ERROR:", err);
+
         setError(
-          err.response?.data?.message || "Gagal mengambil data dashboard."
+          err.response?.data?.message ||
+            "Gagal mengambil data dashboard."
         );
       } finally {
         setLoading(false);
@@ -78,24 +95,36 @@ function AdminDashboard() {
     getDashboardData();
   }, [refreshKey]);
 
+  // PERHITUNGAN STATISTIK
+
   const totalConcerts = concerts.length;
+
   const totalTickets = tickets.reduce(
-    (total, ticket) => total + Number(ticket.stock || 0),
+    (total, ticket) =>
+      total + Number(ticket.stock || 0),
     0
   );
+
   const totalSold = tickets.reduce(
-    (total, ticket) => total + Number(ticket.sold || 0),
+    (total, ticket) =>
+      total + Number(ticket.sold || 0),
     0
   );
+
+  const totalPayments = payments.length;
+
   const pendingPayments = payments.filter(
     (payment) => payment.status === "pending"
   ).length;
+
   const paidPayments = payments.filter(
     (payment) => payment.status === "paid"
   ).length;
+
   const rejectedPayments = payments.filter(
     (payment) => payment.status === "rejected"
   ).length;
+
   const dashboardConcerts = concerts
     .filter(
       (concert) =>
@@ -105,64 +134,83 @@ function AdminDashboard() {
     )
     .slice(0, 3);
 
+  // CARD STATISTIK
+
   const metrics = [
     {
-      label: "Total konser",
-      value: error ? "—" : totalConcerts.toLocaleString("id-ID"),
-      note: "Konser terdaftar",
+      label: "Total Konser",
+      value: totalConcerts,
+      note: "Seluruh konser terdaftar",
       icon: Music2,
-      iconStyle: "bg-violet-50 text-violet-700",
+      iconStyle: "bg-sky-50 text-sky-600",
+      barStyle: "bg-sky-500",
+      barWidth: "w-2/3",
     },
     {
-      label: "Stok tiket",
-      value: error ? "—" : totalTickets.toLocaleString("id-ID"),
+      label: "Stok Tiket",
+      value: totalTickets,
       note: "Seluruh kategori tiket",
       icon: Ticket,
-      iconStyle: "bg-sky-50 text-sky-700",
+      iconStyle: "bg-blue-50 text-blue-600",
+      barStyle: "bg-blue-500",
+      barWidth: "w-4/5",
     },
     {
-      label: "Tiket terjual",
-      value: error ? "—" : totalSold.toLocaleString("id-ID"),
-      note: "Dari seluruh kategori tiket",
+      label: "Tiket Terjual",
+      value: totalSold,
+      note: "Total tiket yang terjual",
       icon: BadgeCheck,
-      iconStyle: "bg-emerald-50 text-emerald-700",
+      iconStyle: "bg-emerald-50 text-emerald-600",
+      barStyle: "bg-emerald-500",
+      barWidth: "w-3/5",
+    },
+    {
+      label: "Total Pembayaran",
+      value: totalPayments,
+      note: "Seluruh transaksi tercatat",
+      icon: CreditCard,
+      iconStyle: "bg-indigo-50 text-indigo-600",
+      barStyle: "bg-indigo-500",
+      barWidth: "w-3/4",
     },
   ];
+
+  // STATUS PEMBAYARAN
 
   const paymentStatuses = [
     {
-      label: "Menunggu pembayaran",
+      label: "Menunggu Pembayaran",
       value: pendingPayments,
       note: "Menunggu konfirmasi Midtrans",
       icon: Clock3,
-      style: "border-amber-100 bg-amber-50/70 text-amber-700",
-      iconStyle: "bg-white text-amber-600",
+      color: "amber",
     },
     {
-      label: "Pembayaran berhasil",
+      label: "Pembayaran Berhasil",
       value: paidPayments,
       note: "Tiket tersedia untuk pembeli",
       icon: BadgeCheck,
-      style: "border-emerald-100 bg-emerald-50/70 text-emerald-700",
-      iconStyle: "bg-white text-emerald-600",
+      color: "emerald",
     },
     {
-      label: "Pembayaran gagal",
+      label: "Pembayaran Gagal",
       value: rejectedPayments,
       note: "Tidak ada tiket diterbitkan",
       icon: XCircle,
-      style: "border-rose-100 bg-rose-50/70 text-rose-700",
-      iconStyle: "bg-white text-rose-600",
+      color: "rose",
     },
   ];
 
+  // LOADING
+
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center px-5">
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#eaf5ff]">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-violet-100 border-t-violet-600" />
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-sky-100 border-t-sky-500" />
+
           <p className="text-sm font-medium text-slate-500">
-            Menyiapkan ringkasan dashboard...
+            Menyiapkan dashboard...
           </p>
         </div>
       </div>
@@ -170,29 +218,56 @@ function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-full bg-slate-50">
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pt-8 lg:px-8">
-        <header className="mb-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+    <div className="min-h-full bg-gradient-to-br from-[#eaf5ff] via-[#f3f9ff] to-[#e4f2ff]">
+
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-7 sm:px-6 lg:px-8">
+
+        {/* HEADER */}
+
+        <header className="mb-7 flex flex-col justify-between gap-5 rounded-[22px] border border-white/90 bg-white/90 p-6 shadow-[0_4px_20px_rgba(56,130,200,0.06)] backdrop-blur-sm sm:flex-row sm:items-center sm:p-7">
+
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-[2.5rem]">
+            <span className="mb-2 inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+              Admin Overview
+            </span>
+
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
               Dashboard
             </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
-              Ringkasan konser, tiket, dan status pembayaran.
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Pantau aktivitas konser, tiket, dan pembayaran dalam satu tempat.
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setRefreshKey((key) => key + 1)
+            }
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-sky-100 bg-sky-50 px-5 py-3 text-sm font-semibold text-sky-700 transition hover:border-sky-200 hover:bg-sky-100 active:scale-[0.98]"
+          >
+            <RefreshCw size={16} />
+            Refresh Data
+          </button>
+
         </header>
+
+        {/* ERROR */}
 
         {error && (
           <div
             role="alert"
-            className="mb-6 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 sm:flex-row sm:items-center sm:justify-between"
+            className="mb-6 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-white px-5 py-4 text-sm text-rose-700 sm:flex-row sm:items-center sm:justify-between"
           >
             <span>{error}</span>
+
             <button
               type="button"
-              onClick={() => setRefreshKey((key) => key + 1)}
-              className="inline-flex shrink-0 items-center gap-2 self-start font-semibold text-rose-800 hover:underline sm:self-auto"
+              onClick={() =>
+                setRefreshKey((key) => key + 1)
+              }
+              className="inline-flex items-center gap-2 font-semibold hover:underline"
             >
               <RefreshCw size={15} />
               Coba lagi
@@ -200,173 +275,281 @@ function AdminDashboard() {
           </div>
         )}
 
+        {/* STATISTIK */}
+
         <section
-          aria-label="Ringkasan performa"
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+          aria-label="Statistik dashboard"
+          className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
         >
           {metrics.map(
-            ({ label, value, note, icon: Icon, iconStyle }) => (
+            ({
+              label,
+              value,
+              note,
+              icon: Icon,
+              iconStyle,
+              barStyle,
+              barWidth,
+            }) => (
               <article
                 key={label}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className="group rounded-[21px] border border-white bg-white p-5 shadow-[0_4px_18px_rgba(56,130,200,0.055)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(56,130,200,0.12)] sm:p-6"
               >
                 <div className="flex items-start justify-between gap-3">
+
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-500">
                       {label}
                     </p>
-                    <p className="mt-4 break-words text-2xl font-bold tracking-tight text-slate-950 sm:text-[1.8rem]">
-                      {value}
+
+                    <h2 className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
+                      {error ? "—" : formatNumber(value)}
+                    </h2>
+
+                    <p className="mt-2 text-xs text-slate-400">
+                      {note}
                     </p>
                   </div>
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconStyle}`}
+
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${iconStyle} transition duration-300 group-hover:scale-105`}
                   >
-                    <Icon size={19} strokeWidth={1.9} />
-                  </span>
+                    <Icon size={22} strokeWidth={1.8} />
+                  </div>
+
                 </div>
-                <p className="mt-3 text-xs text-slate-400">
-                  {note}
-                </p>
+
+                <div className="mt-5 h-1 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className={`h-full rounded-full ${barStyle} ${barWidth}`}
+                  />
+                </div>
               </article>
             )
           )}
         </section>
 
-        <section className="mt-9">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        {/* PEMBAYARAN */}
+
+        <section className="mt-10">
+
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+
             <div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900">
-                Aktivitas pembayaran
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                Aktivitas Pembayaran
               </h2>
+
               <p className="mt-1 text-sm text-slate-500">
                 Ringkasan status transaksi yang tercatat.
               </p>
             </div>
+
             <Link
               to="/admin/payments"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-700 transition hover:text-violet-900"
+              className="inline-flex items-center gap-2 rounded-xl border border-sky-100 bg-white px-4 py-2.5 text-sm font-semibold text-sky-700 shadow-sm transition hover:bg-sky-50"
             >
-              Lihat semua <ArrowRight size={15} />
+              Lihat semua
+              <ArrowRight size={16} />
             </Link>
+
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+
             {paymentStatuses.map(
-              ({ label, value, note, icon: Icon, style, iconStyle }) => (
+              ({ label, value, note, icon: Icon, color }) => (
                 <article
                   key={label}
-                  className={`flex items-center justify-between gap-4 rounded-2xl border p-4 sm:p-5 ${style}`}
+                  className="group rounded-[20px] border border-white bg-white p-5 shadow-[0_4px_18px_rgba(56,130,200,0.045)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_22px_rgba(56,130,200,0.09)]"
                 >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ${iconStyle}`}
+
+                  <div className="flex items-center justify-between gap-3">
+
+                    <div
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                        color === "amber"
+                          ? "bg-amber-50 text-amber-600"
+                          : color === "emerald"
+                          ? "bg-emerald-50 text-emerald-600"
+                          : "bg-rose-50 text-rose-600"
+                      }`}
                     >
-                      <Icon size={19} strokeWidth={1.9} />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-700">
-                        {label}
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-500">{note}</p>
+                      <Icon size={21} strokeWidth={1.8} />
                     </div>
+
+                    <span
+                      className={`text-3xl font-bold tracking-tight ${
+                        color === "amber"
+                          ? "text-amber-600"
+                          : color === "emerald"
+                          ? "text-emerald-600"
+                          : "text-rose-600"
+                      }`}
+                    >
+                      {error ? "—" : formatNumber(value)}
+                    </span>
+
                   </div>
-                  <p className="text-2xl font-bold tracking-tight text-slate-900">
-                    {error ? "—" : value.toLocaleString("id-ID")}
-                  </p>
+
+                  <div className="mt-5">
+                    <h3 className="text-sm font-bold text-slate-800">
+                      {label}
+                    </h3>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {note}
+                    </p>
+                  </div>
+
                 </article>
               )
             )}
+
           </div>
         </section>
 
-        <section className="mt-7" aria-labelledby="concert-list-title">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        {/* KONSER MENDATANG */}
+
+        <section
+          className="mt-10"
+          aria-labelledby="concert-list-title"
+        >
+
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+
             <div>
               <h2
                 id="concert-list-title"
-                className="text-lg font-bold tracking-tight text-slate-900"
+                className="text-xl font-bold tracking-tight text-slate-900"
               >
-                Konser mendatang
+                Konser Mendatang
               </h2>
+
               <p className="mt-1 text-sm text-slate-500">
                 Maksimal tiga konser yang belum selesai dan belum sold out.
               </p>
             </div>
-            <span className="text-sm font-medium text-slate-500">
-              {dashboardConcerts.length} ditampilkan
+
+            <span className="rounded-full border border-sky-100 bg-white px-4 py-2 text-xs font-semibold text-sky-700">
+              {dashboardConcerts.length} Ditampilkan
             </span>
+
           </div>
 
-          <div>
-            {dashboardConcerts.length === 0 ? (
-              <p className="rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center text-sm text-slate-500 shadow-sm">
+          {dashboardConcerts.length === 0 ? (
+
+            <div className="rounded-[22px] border border-white bg-white px-5 py-14 text-center shadow-sm">
+
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                <Music2 size={26} />
+              </div>
+
+              <h3 className="mt-4 text-sm font-bold text-slate-800">
+                Belum Ada Konser
+              </h3>
+
+              <p className="mt-1 text-sm text-slate-400">
                 Belum ada konser mendatang dengan tiket tersedia.
               </p>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {dashboardConcerts.map((concert) => {
-                  const status = concert.status || "upcoming";
-                  const venueAddress =
-                    concert.venue_address ||
-                    concert.venues?.address ||
-                    concert.venues?.name;
 
-                  return (
-                    <article
-                      key={concert.id}
-                      className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <div className="relative aspect-[16/9] bg-slate-100">
-                        {concert.poster ? (
-                          <img
-                            src={concert.poster}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-slate-400">
-                            <Music2 size={32} strokeWidth={1.6} />
-                          </div>
-                        )}
-                        <span
-                          className={`absolute right-3 top-3 inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ${
-                            concertStatusStyles[status] ||
-                            concertStatusStyles.upcoming
-                          }`}
-                        >
-                          {concertStatusLabels[status] || "Akan datang"}
-                        </span>
-                      </div>
+            </div>
 
-                      <div className="p-4">
-                        <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-slate-900">
-                          {concert.title}
-                        </h3>
-                        <p className="mt-1 truncate text-sm text-slate-500">
-                          {concert.artist_names ||
-                            concert.artists?.name ||
-                            "Artis belum diisi"}
-                        </p>
-                        <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
-                          <p className="flex items-center gap-2 text-xs text-slate-500">
-                            <Clock3 size={14} className="shrink-0 text-slate-400" />
-                            {formatConcertDate(concert.concert_date)}
-                          </p>
-                          {venueAddress && (
-                            <p className="truncate text-xs text-slate-500">
-                              {venueAddress}
-                            </p>
-                          )}
+          ) : (
+
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+              {dashboardConcerts.map((concert) => {
+                const status = concert.status || "upcoming";
+
+                const venueAddress =
+                  concert.venue_address ||
+                  concert.venues?.address ||
+                  concert.venues?.name;
+
+                return (
+                  <article
+                    key={concert.id}
+                    className="group min-w-0 overflow-hidden rounded-[22px] border border-white bg-white shadow-[0_4px_18px_rgba(56,130,200,0.055)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(56,130,200,0.12)]"
+                  >
+
+                    {/* POSTER */}
+
+                    <div className="relative aspect-[16/9] overflow-hidden bg-sky-50">
+
+                      {concert.poster ? (
+                        <img
+                          src={concert.poster}
+                          alt={concert.title || "Poster konser"}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sky-300">
+                          <Music2 size={38} strokeWidth={1.5} />
                         </div>
+                      )}
+
+                      <span
+                        className={`absolute right-3 top-3 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ${
+                          concertStatusStyles[status] ||
+                          concertStatusStyles.upcoming
+                        }`}
+                      >
+                        {concertStatusLabels[status] || "Akan datang"}
+                      </span>
+
+                    </div>
+
+                    {/* DETAIL KONSER */}
+
+                    <div className="p-5">
+
+                      <h3 className="line-clamp-2 min-h-10 text-base font-bold leading-5 text-slate-900 transition group-hover:text-sky-700">
+                        {concert.title}
+                      </h3>
+
+                      <p className="mt-1 truncate text-sm text-slate-500">
+                        {concert.artist_names ||
+                          concert.artists?.name ||
+                          "Artis belum diisi"}
+                      </p>
+
+                      <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">
+
+                        <p className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                          <CalendarDays
+                            size={15}
+                            className="shrink-0 text-sky-600"
+                          />
+                          {formatConcertDate(concert.concert_date)}
+                        </p>
+
+                        {venueAddress && (
+                          <p className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                            <MapPin
+                              size={15}
+                              className="shrink-0 text-sky-600"
+                            />
+
+                            <span className="truncate">
+                              {venueAddress}
+                            </span>
+                          </p>
+                        )}
+
                       </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+
+                    </div>
+
+                  </article>
+                );
+              })}
+
+            </div>
+          )}
+
         </section>
+
       </main>
     </div>
   );
